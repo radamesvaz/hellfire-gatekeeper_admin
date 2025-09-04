@@ -1,0 +1,132 @@
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--surface-color);
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.data-table td {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Table Actions */
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.table-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: 1.75rem;
+}
+
+/* Table Content */
+.table-content {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-content.expandable {
+    cursor: pointer;
+}
+
+.table-content.expandable:hover {
+    color: var(--primary-color);
+}
+
+/* Price Column */
+.price-column {
+    font-weight: 600;
+    color: var(--success-color);
+}
+
+/* Stock Column */
+.stock-column {
+    font-weight: 500;
+}
+
+.stock-low {
+    color: var(--warning-color);
+}
+
+.stock-out {
+    color: var(--danger-color);
+}
+
+/* Order Items */
+.order-items {
+    max-width: 300px;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+}
+
+.order-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-item-name {
+    font-weight: 500;
+}
+
+.order-item-quantity {
+    color: var(--text-secondary);
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .table-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .table-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
