@@ -74,8 +74,8 @@ export class OrderManager {
         const customerCell = document.createElement('td');
         customerCell.innerHTML = `
             <div>
-                <div><strong>${order.customer.name}</strong></div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${order.customer.email}</div>
+                <div><strong>${order.customer}</strong></div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">ID: ${order.userId}</div>
             </div>
         `;
 
@@ -85,8 +85,7 @@ export class OrderManager {
 
         // Total
         const totalCell = document.createElement('td');
-        const total = this.orderService.calculateOrderTotal(order.items);
-        totalCell.innerHTML = `<span class="price-column">${this.uiManager.formatPrice(total)}</span>`;
+        totalCell.innerHTML = `<span class="price-column">${this.uiManager.formatPrice(order.total)}</span>`;
 
         // Status
         const statusCell = document.createElement('td');
@@ -94,7 +93,7 @@ export class OrderManager {
 
         // Date
         const dateCell = document.createElement('td');
-        dateCell.textContent = this.uiManager.formatDate(order.createdAt);
+        dateCell.textContent = this.uiManager.formatDate(order.date);
 
         // Actions
         const actionsCell = document.createElement('td');
@@ -124,6 +123,7 @@ export class OrderManager {
             <div class="order-item">
                 <span class="order-item-name">${item.name}</span>
                 <span class="order-item-quantity">x${item.quantity}</span>
+                <span class="order-item-price">$${item.price}</span>
             </div>
         `).join('');
 
@@ -198,7 +198,7 @@ export class OrderManager {
     // Helper method to get orders for a specific date range
     getOrdersByDateRange(startDate, endDate) {
         return this.orders.filter(order => {
-            const orderDate = new Date(order.createdAt);
+            const orderDate = new Date(order.date);
             return orderDate >= startDate && orderDate <= endDate;
         });
     }

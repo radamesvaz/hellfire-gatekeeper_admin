@@ -5,6 +5,7 @@ import { mockData, simulateApiDelay } from './mockData.js';
 export class OrderService {
     constructor() {
         this.baseURL = config.api.baseURL;
+        this.authRequired = config.api.authRequired;
         this.authService = new AuthService();
         this.useMockData = config.development.useMockData;
         
@@ -22,7 +23,7 @@ export class OrderService {
                 return this.mockOrders;
             } else {
                 // Real API call
-                const response = await fetch(`${this.baseURL}/orders`, {
+                const response = await fetch(`${this.baseURL}${this.authRequired}/orders`, {
                     method: 'GET',
                     headers: this.authService.getAuthHeaders(),
                 });
@@ -31,7 +32,9 @@ export class OrderService {
                     throw new Error('Failed to fetch orders');
                 }
 
-                return await response.json();
+                const orders = await response.json();
+                // Transform server data to match our expected format
+                return this.transformOrdersData(orders);
             }
         } catch (error) {
             console.error('Get orders error:', error);
@@ -41,7 +44,7 @@ export class OrderService {
 
     async getOrder(id) {
         try {
-            const response = await fetch(`${this.baseURL}/orders/${id}`, {
+            const response = await fetch(`${this.baseURL}${this.authRequired}/orders/${id}`, {
                 method: 'GET',
                 headers: this.authService.getAuthHeaders(),
             });
@@ -78,7 +81,7 @@ export class OrderService {
                 return updatedOrder;
             } else {
                 // Real API call
-                const response = await fetch(`${this.baseURL}/orders/${id}/status`, {
+                const response = await fetch(`${this.baseURL}${this.authRequired}/orders/${id}/status`, {
                     method: 'PUT',
                     headers: this.authService.getAuthHeaders(),
                     body: JSON.stringify({ status }),
@@ -99,7 +102,7 @@ export class OrderService {
 
     async deleteOrder(id) {
         try {
-            const response = await fetch(`${this.baseURL}/orders/${id}`, {
+            const response = await fetch(`${this.baseURL}${this.authRequired}/orders/${id}`, {
                 method: 'DELETE',
                 headers: this.authService.getAuthHeaders(),
             });
@@ -119,7 +122,7 @@ export class OrderService {
     // Helper method to get order statistics
     async getOrderStats() {
         try {
-            const response = await fetch(`${this.baseURL}/orders/stats`, {
+            const response = await fetch(`${this.baseURL}${this.authRequired}/orders/stats`, {
                 method: 'GET',
                 headers: this.authService.getAuthHeaders(),
             });
@@ -158,5 +161,44 @@ export class OrderService {
         return items.reduce((total, item) => {
             return total + (item.price * item.quantity);
         }, 0);
+    }
+
+    // Transform server data to match our expected format
+    transformOrdersData(serverOrders) {
+        return serverOrders.map(order => ({
+            id: order.id_order,
+            customer: order.user_name,
+            items: this.transformOrderItems(order.OrderItems || []),
+            total: order.total_price,
+            status: order.status,
+            date: order.created_on,
+            deliveryDate: order.delivery_date,
+            note: order.note || '',
+            userId: order.id_user
+        }));
+    }
+
+    // Transform order items from server format
+    transformOrderItems(serverItems) {
+        return serverItems.map(item => ({
+            id: item.id_order_item,
+            productId: item.id_product,
+            quantity: item.quantity || 1,
+            price: item.price || 0,
+            name: item.product_name || 'Unknown Product'
+        }));
+    }
+
+    // Helper method to get items summary for display
+    getItemsSummary(items) {
+        if (!items || items.length === 0) {
+            return 'No items';
+        }
+        
+        if (items.length === 1) {
+            return `${items[0].name} (${items[0].quantity})`;
+        }
+        
+        return `${items.length} items`;
     }
 }
