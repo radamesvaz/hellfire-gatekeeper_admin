@@ -5,15 +5,9 @@ import { UIManager } from './ui/uiManager.js';
 import { ProductManager } from './ui/productManager.js';
 import { OrderManager } from './ui/orderManager.js';
 import { config } from './config.js';
-import { auth } from './firebase.js'; // Import Firebase auth
 
 class AdminDashboard {
     constructor() {
-        // Initialize Firebase if enabled
-        if (config.firebase.enabled) {
-            console.log('Firebase is enabled and initialized');
-        }
-        
         this.authService = new AuthService();
         this.productService = new ProductService();
         this.orderService = new OrderService();
@@ -30,35 +24,20 @@ class AdminDashboard {
     }
 
     async init() {
-        if (config.firebase.useFirebaseAuth) {
-            // Listen for Firebase auth state changes
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in
-                    console.log('User is signed in:', user.email);
-                    this.showDashboard();
-                } else {
-                    // User is signed out
-                    console.log('User is signed out');
-                    this.showLogin();
-                }
-            });
-        } else {
-            // Check if user is already authenticated (for non-Firebase auth)
-            const token = this.authService.getToken();
-            if (token) {
-                try {
-                    // Verify token is still valid
-                    await this.authService.verifyToken();
-                    this.showDashboard();
-                } catch (error) {
-                    console.error('Token verification failed:', error);
-                    this.authService.logout();
-                    this.showLogin();
-                }
-            } else {
+        // Check if user is already authenticated
+        const token = this.authService.getToken();
+        if (token) {
+            try {
+                // Verify token is still valid
+                await this.authService.verifyToken();
+                this.showDashboard();
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                this.authService.logout();
                 this.showLogin();
             }
+        } else {
+            this.showLogin();
         }
 
         this.setupEventListeners();
