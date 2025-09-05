@@ -79,8 +79,8 @@ export class OrderService {
                 this.mockOrders[orderIndex] = updatedOrder;
                 return updatedOrder;
             } else {
-                // Real API call using HttpService
-                const response = await this.httpService.put(`${this.baseURL}${this.authRequired}/orders/${id}/status`, { status });
+                // Real API call using HttpService with PATCH method
+                const response = await this.httpService.patch(`${this.baseURL}${this.authRequired}/orders/${id}/status`, { status });
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -135,7 +135,7 @@ export class OrderService {
 
     // Helper method to validate order status
     validateOrderStatus(status) {
-        const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+        const validStatuses = ['pending', 'preparing', 'ready', 'delivered', 'cancelled'];
         return validStatuses.includes(status);
     }
 
