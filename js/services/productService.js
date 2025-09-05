@@ -1,11 +1,13 @@
 import { config, getApiUrl, getAuthHeaders } from '../config.js';
 import { AuthService } from './authService.js';
+import { HttpService } from './httpService.js';
 import { mockData, simulateApiDelay, generateId } from './mockData.js';
 
 export class ProductService {
     constructor() {
         this.baseURL = config.api.baseURL;
         this.authService = new AuthService();
+        this.httpService = new HttpService();
         this.useMockData = config.development.useMockData;
         
         // Initialize mock data storage
@@ -21,11 +23,8 @@ export class ProductService {
                 await simulateApiDelay(600);
                 return this.mockProducts;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products`, {
-                    method: 'GET',
-                    headers: this.authService.getAuthHeaders(),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.get(`${this.baseURL}/products`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch products');
@@ -73,12 +72,8 @@ export class ProductService {
                 this.mockProducts.push(newProduct);
                 return newProduct;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products`, {
-                    method: 'POST',
-                    headers: this.authService.getAuthHeaders(),
-                    body: JSON.stringify(productData),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.post(`${this.baseURL}/products`, productData);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -113,12 +108,8 @@ export class ProductService {
                 this.mockProducts[productIndex] = updatedProduct;
                 return updatedProduct;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products/${id}`, {
-                    method: 'PUT',
-                    headers: this.authService.getAuthHeaders(),
-                    body: JSON.stringify(productData),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.put(`${this.baseURL}/products/${id}`, productData);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -147,11 +138,8 @@ export class ProductService {
                 this.mockProducts.splice(productIndex, 1);
                 return true;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products/${id}`, {
-                    method: 'DELETE',
-                    headers: this.authService.getAuthHeaders(),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.delete(`${this.baseURL}/products/${id}`);
 
                 if (!response.ok) {
                     const error = await response.json();

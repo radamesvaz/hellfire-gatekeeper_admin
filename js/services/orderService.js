@@ -1,5 +1,6 @@
 import { config, getApiUrl, getAuthHeaders } from '../config.js';
 import { AuthService } from './authService.js';
+import { HttpService } from './httpService.js';
 import { mockData, simulateApiDelay } from './mockData.js';
 
 export class OrderService {
@@ -7,6 +8,7 @@ export class OrderService {
         this.baseURL = config.api.baseURL;
         this.authRequired = config.api.authRequired;
         this.authService = new AuthService();
+        this.httpService = new HttpService();
         this.useMockData = config.development.useMockData;
         
         // Initialize mock data storage
@@ -22,11 +24,8 @@ export class OrderService {
                 await simulateApiDelay(600);
                 return this.mockOrders;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}${this.authRequired}/orders`, {
-                    method: 'GET',
-                    headers: this.authService.getAuthHeaders(),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.get(`${this.baseURL}${this.authRequired}/orders`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch orders');
@@ -80,12 +79,8 @@ export class OrderService {
                 this.mockOrders[orderIndex] = updatedOrder;
                 return updatedOrder;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}${this.authRequired}/orders/${id}/status`, {
-                    method: 'PUT',
-                    headers: this.authService.getAuthHeaders(),
-                    body: JSON.stringify({ status }),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.put(`${this.baseURL}${this.authRequired}/orders/${id}/status`, { status });
 
                 if (!response.ok) {
                     const error = await response.json();
