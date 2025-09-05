@@ -217,6 +217,22 @@
     color: #991b1b;
 }
 
+/* Product Status Badges */
+.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-inactive {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.status-featured {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
 /* Product Image */
 .product-image {
     width: 50px;

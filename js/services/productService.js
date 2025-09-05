@@ -30,7 +30,9 @@ export class ProductService {
                     throw new Error('Failed to fetch products');
                 }
 
-                return await response.json();
+                const products = await response.json();
+                // Transform server data to match our expected format
+                return this.transformProductsData(products);
             }
         } catch (error) {
             console.error('Get products error:', error);
@@ -174,10 +176,46 @@ export class ProductService {
             errors.push('Valid stock quantity is required');
         }
 
-        if (!data.category || data.category.trim().length === 0) {
-            errors.push('Product category is required');
+        if (!data.status || data.status.trim().length === 0) {
+            errors.push('Product status is required');
         }
 
         return errors;
+    }
+
+    // Transform server data to match our expected format
+    transformProductsData(serverProducts) {
+        return serverProducts.map(product => ({
+            id: product.id_product,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            stock: product.stock,
+            imageUrl: product.image_url || this.getDummyImage(product.name),
+            status: product.status,
+            available: product.available,
+            createdAt: product.created_on
+        }));
+    }
+
+    // Get dummy image based on product name
+    getDummyImage(productName) {
+        const name = productName.toLowerCase();
+        
+        // Map product names to appropriate dummy images
+        if (name.includes('brownie') || name.includes('chocolate')) {
+            return 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('suspiro') || name.includes('merengue')) {
+            return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('torta') || name.includes('cake')) {
+            return 'https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('cookie') || name.includes('galleta')) {
+            return 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('pan') || name.includes('bread')) {
+            return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&h=200&fit=crop&crop=center';
+        } else {
+            // Default pastry image
+            return 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=200&h=200&fit=crop&crop=center';
+        }
     }
 }
