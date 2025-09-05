@@ -131,7 +131,9 @@ export class OrderManager {
     }
 
     editOrderStatus(orderId) {
-        this.editingOrder = this.orders.find(o => o.id === orderId);
+        // Convert orderId to number since it comes as string from HTML
+        const numericOrderId = parseInt(orderId, 10);
+        this.editingOrder = this.orders.find(o => o.id === numericOrderId);
         if (!this.editingOrder) {
             this.uiManager.showError('Order not found');
             return;
