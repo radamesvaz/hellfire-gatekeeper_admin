@@ -1,11 +1,13 @@
 import { config, getApiUrl, getAuthHeaders } from '../config.js';
 import { AuthService } from './authService.js';
+import { HttpService } from './httpService.js';
 import { mockData, simulateApiDelay, generateId } from './mockData.js';
 
 export class ProductService {
     constructor() {
         this.baseURL = config.api.baseURL;
         this.authService = new AuthService();
+        this.httpService = new HttpService();
         this.useMockData = config.development.useMockData;
         
         // Initialize mock data storage
@@ -21,17 +23,16 @@ export class ProductService {
                 await simulateApiDelay(600);
                 return this.mockProducts;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products`, {
-                    method: 'GET',
-                    headers: this.authService.getAuthHeaders(),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.get(`${this.baseURL}/products`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch products');
                 }
 
-                return await response.json();
+                const products = await response.json();
+                // Transform server data to match our expected format
+                return this.transformProductsData(products);
             }
         } catch (error) {
             console.error('Get products error:', error);
@@ -73,12 +74,8 @@ export class ProductService {
                 this.mockProducts.push(newProduct);
                 return newProduct;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products`, {
-                    method: 'POST',
-                    headers: this.authService.getAuthHeaders(),
-                    body: JSON.stringify(productData),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.post(`${this.baseURL}/products`, productData);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -113,12 +110,8 @@ export class ProductService {
                 this.mockProducts[productIndex] = updatedProduct;
                 return updatedProduct;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products/${id}`, {
-                    method: 'PUT',
-                    headers: this.authService.getAuthHeaders(),
-                    body: JSON.stringify(productData),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.put(`${this.baseURL}/products/${id}`, productData);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -147,11 +140,8 @@ export class ProductService {
                 this.mockProducts.splice(productIndex, 1);
                 return true;
             } else {
-                // Real API call
-                const response = await fetch(`${this.baseURL}/products/${id}`, {
-                    method: 'DELETE',
-                    headers: this.authService.getAuthHeaders(),
-                });
+                // Real API call using HttpService
+                const response = await this.httpService.delete(`${this.baseURL}/products/${id}`);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -186,10 +176,46 @@ export class ProductService {
             errors.push('Valid stock quantity is required');
         }
 
-        if (!data.category || data.category.trim().length === 0) {
-            errors.push('Product category is required');
+        if (!data.status || data.status.trim().length === 0) {
+            errors.push('Product status is required');
         }
 
         return errors;
+    }
+
+    // Transform server data to match our expected format
+    transformProductsData(serverProducts) {
+        return serverProducts.map(product => ({
+            id: product.id_product,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            stock: product.stock,
+            imageUrl: product.image_url || this.getDummyImage(product.name),
+            status: product.status,
+            available: product.available,
+            createdAt: product.created_on
+        }));
+    }
+
+    // Get dummy image based on product name
+    getDummyImage(productName) {
+        const name = productName.toLowerCase();
+        
+        // Map product names to appropriate dummy images
+        if (name.includes('brownie') || name.includes('chocolate')) {
+            return 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('suspiro') || name.includes('merengue')) {
+            return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('torta') || name.includes('cake')) {
+            return 'https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('cookie') || name.includes('galleta')) {
+            return 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=200&h=200&fit=crop&crop=center';
+        } else if (name.includes('pan') || name.includes('bread')) {
+            return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&h=200&fit=crop&crop=center';
+        } else {
+            // Default pastry image
+            return 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=200&h=200&fit=crop&crop=center';
+        }
     }
 }

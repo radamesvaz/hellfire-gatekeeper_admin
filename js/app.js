@@ -1,6 +1,7 @@
 import { AuthService } from './services/authService.js';
 import { ProductService } from './services/productService.js';
 import { OrderService } from './services/orderService.js';
+import { HttpService } from './services/httpService.js';
 import { UIManager } from './ui/uiManager.js';
 import { ProductManager } from './ui/productManager.js';
 import { OrderManager } from './ui/orderManager.js';
@@ -9,6 +10,7 @@ import { config } from './config.js';
 class AdminDashboard {
     constructor() {
         this.authService = new AuthService();
+        this.httpService = new HttpService();
         this.productService = new ProductService();
         this.orderService = new OrderService();
         this.uiManager = new UIManager();
@@ -24,6 +26,11 @@ class AdminDashboard {
     }
 
     async init() {
+        // Setup HTTP interceptor for unauthorized responses
+        this.httpService.setUnauthorizedCallback(() => {
+            this.handleUnauthorized();
+        });
+
         // Check if user is already authenticated
         const token = this.authService.getToken();
         if (token) {
@@ -193,6 +200,14 @@ class AdminDashboard {
         document.getElementById('ordersSection').classList.toggle('hidden', section !== 'orders');
 
         this.currentSection = section;
+    }
+
+    handleUnauthorized() {
+        // Show error message
+        this.uiManager.showError('Your session has expired. Please log in again.');
+        
+        // Redirect to login
+        this.showLogin();
     }
 }
 

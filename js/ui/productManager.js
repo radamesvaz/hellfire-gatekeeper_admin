@@ -100,9 +100,9 @@ export class ProductManager {
         const priceCell = document.createElement('td');
         priceCell.innerHTML = `<span class="price-column">${this.uiManager.formatPrice(product.price)}</span>`;
 
-        // Category
-        const categoryCell = document.createElement('td');
-        categoryCell.textContent = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+        // Status
+        const statusCell = document.createElement('td');
+        statusCell.innerHTML = `<span class="status-badge status-${product.status}">${product.status}</span>`;
 
         // Stock
         const stockCell = document.createElement('td');
@@ -122,7 +122,7 @@ export class ProductManager {
         row.appendChild(nameCell);
         row.appendChild(descCell);
         row.appendChild(priceCell);
-        row.appendChild(categoryCell);
+        row.appendChild(statusCell);
         row.appendChild(stockCell);
         row.appendChild(actionsCell);
 
@@ -153,7 +153,7 @@ export class ProductManager {
         document.getElementById('productDescription').value = product.description;
         document.getElementById('productPrice').value = product.price;
         document.getElementById('productStock').value = product.stock;
-        document.getElementById('productCategory').value = product.category;
+        document.getElementById('productStatus').value = product.status;
         document.getElementById('productImage').value = product.imageUrl || '';
     }
 

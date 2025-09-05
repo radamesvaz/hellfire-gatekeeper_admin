@@ -1,0 +1,97 @@
+// HTTP Service with global error handling and authentication
+import { AuthService } from './authService.js';
+
+export class HttpService {
+    constructor() {
+        this.authService = new AuthService();
+        this.onUnauthorized = null;
+    }
+
+    // Set callback for unauthorized responses
+    setUnauthorizedCallback(callback) {
+        this.onUnauthorized = callback;
+    }
+
+    // Generic fetch method with error handling
+    async fetch(url, options = {}) {
+        try {
+            const response = await fetch(url, options);
+            
+            // Check for 401 Unauthorized
+            if (response.status === 401) {
+                console.log('Token expired or invalid - redirecting to login');
+                this.handleUnauthorized();
+                throw new Error('Unauthorized - token expired');
+            }
+            
+            return response;
+        } catch (error) {
+            // Re-throw the error to be handled by the calling service
+            throw error;
+        }
+    }
+
+    // Handle unauthorized access
+    handleUnauthorized() {
+        // Clear stored authentication data
+        this.authService.logout();
+        
+        // Call the unauthorized callback if set
+        if (this.onUnauthorized) {
+            this.onUnauthorized();
+        }
+    }
+
+    // GET request with auth headers
+    async get(url) {
+        const options = {
+            method: 'GET',
+            headers: this.authService.getAuthHeaders(),
+        };
+        
+        return this.fetch(url, options);
+    }
+
+    // POST request with auth headers
+    async post(url, data) {
+        const options = {
+            method: 'POST',
+            headers: this.authService.getAuthHeaders(),
+            body: JSON.stringify(data),
+        };
+        
+        return this.fetch(url, options);
+    }
+
+    // PUT request with auth headers
+    async put(url, data) {
+        const options = {
+            method: 'PUT',
+            headers: this.authService.getAuthHeaders(),
+            body: JSON.stringify(data),
+        };
+        
+        return this.fetch(url, options);
+    }
+
+    // PATCH request with auth headers
+    async patch(url, data) {
+        const options = {
+            method: 'PATCH',
+            headers: this.authService.getAuthHeaders(),
+            body: JSON.stringify(data),
+        };
+        
+        return this.fetch(url, options);
+    }
+
+    // DELETE request with auth headers
+    async delete(url) {
+        const options = {
+            method: 'DELETE',
+            headers: this.authService.getAuthHeaders(),
+        };
+        
+        return this.fetch(url, options);
+    }
+}
