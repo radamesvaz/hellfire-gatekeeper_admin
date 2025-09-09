@@ -1,5 +1,35 @@
 // Configuration file for the admin dashboard
+
+// Environment detection
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+// Environment-specific configurations
+const environments = {
+    development: {
+        api: {
+            baseURL: 'http://localhost:8080',
+        }
+    },
+    production: {
+        api: {
+            baseURL: 'https://api.tudominio.com', // Cambiar por tu dominio de producción
+        }
+    }
+};
+
+// Get current environment config
+const currentEnv = isDevelopment ? 'development' : 'production';
+const envConfig = environments[currentEnv];
+
 export const config = {
+    // Environment info
+    environment: {
+        isDevelopment,
+        isProduction,
+        current: currentEnv,
+    },
+    
     // Development Mode
     development: {
         useMockData: false, // Set to false when backend is ready
@@ -15,7 +45,7 @@ export const config = {
     
     // API Configuration
     api: {
-        baseURL: 'http://localhost:8080', // Update this to match your backend URL
+        baseURL: envConfig.api.baseURL,
         authRequired: '/auth',
         timeout: 10000, // Request timeout in milliseconds
     },
@@ -65,10 +95,34 @@ export const getApiUrl = (endpoint) => {
     return `${config.api.baseURL}${endpoint}`;
 };
 
+// Helper function to get image URL
+export const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http')) {
+        return imagePath;
+    }
+    
+    // Clean the path (remove spaces and encode properly)
+    const cleanPath = imagePath.replace(/\s+/g, '%20');
+    
+    // Return full URL with backend base
+    return `${config.api.baseURL}${cleanPath}`;
+};
+
 // Helper function to get auth headers
 export const getAuthHeaders = (token) => {
     return {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
     };
+};
+
+// Helper function to log current environment (for debugging)
+export const logEnvironment = () => {
+    console.log('Environment:', config.environment.current);
+    console.log('API Base URL:', config.api.baseURL);
+    console.log('Is Development:', config.environment.isDevelopment);
+    console.log('Is Production:', config.environment.isProduction);
 };

@@ -163,8 +163,14 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="productImage">Image URL</label>
-                    <input type="url" id="productImage" name="imageUrl" placeholder="https://example.com/image.jpg">
+                    <label for="productImages">Product Images</label>
+                    <input type="file" id="productImages" name="images" multiple accept="image/*" class="file-input">
+                    <div class="file-input-info">
+                        <small>Select multiple images (JPG, PNG, GIF)</small>
+                    </div>
+                    <div id="imagePreview" class="image-preview-container">
+                        <!-- Image previews will be shown here -->
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancelProduct">Cancel</button>

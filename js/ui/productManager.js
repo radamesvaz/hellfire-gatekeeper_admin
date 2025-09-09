@@ -1,9 +1,12 @@
+import { config, getImageUrl } from '../config.js';
+
 export class ProductManager {
     constructor(productService, uiManager) {
         this.productService = productService;
         this.uiManager = uiManager;
         this.products = [];
         this.editingProduct = null;
+        this.selectedImages = [];
         
         this.setupEventListeners();
     }
@@ -20,6 +23,12 @@ export class ProductManager {
         productForm.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleProductSubmit();
+        });
+
+        // Image file input
+        const productImagesInput = document.getElementById('productImages');
+        productImagesInput.addEventListener('change', (e) => {
+            this.handleImageSelection(e);
         });
 
         // Modal close buttons
@@ -76,10 +85,12 @@ export class ProductManager {
         const imageCell = document.createElement('td');
         if (product.imageUrl) {
             const img = document.createElement('img');
-            img.src = product.imageUrl;
+            // Use the helper function to get the correct image URL
+            img.src = getImageUrl(product.imageUrl);
             img.alt = product.name;
             img.className = 'product-image';
             img.onerror = () => {
+                console.log('Failed to load image:', img.src);
                 img.style.display = 'none';
                 imageCell.innerHTML = '<div class="product-image-placeholder">No Image</div>';
             };
@@ -131,6 +142,8 @@ export class ProductManager {
 
     showAddProductModal() {
         this.editingProduct = null;
+        this.selectedImages = [];
+        this.clearImagePreview();
         document.getElementById('productModalTitle').textContent = 'Add New Product';
         this.uiManager.resetForm('productForm');
         this.uiManager.showModal('productModal');
@@ -154,11 +167,19 @@ export class ProductManager {
         document.getElementById('productPrice').value = product.price;
         document.getElementById('productStock').value = product.stock;
         document.getElementById('productStatus').value = product.status;
-        document.getElementById('productImage').value = product.imageUrl || '';
+        
+        // Clear images for editing (we'll keep the existing imageUrl for display)
+        this.selectedImages = [];
+        this.clearImagePreview();
     }
 
     async handleProductSubmit() {
         const formData = this.uiManager.getFormData('productForm');
+        
+        // Add images to form data
+        if (this.selectedImages.length > 0) {
+            formData.images = this.selectedImages;
+        }
         
         // Validate form data
         const errors = this.productService.validateProductData(formData);
@@ -218,7 +239,73 @@ export class ProductManager {
     hideProductModal() {
         this.uiManager.hideModal('productModal');
         this.editingProduct = null;
+        this.selectedImages = [];
+        this.clearImagePreview();
         this.uiManager.resetForm('productForm');
+    }
+
+    handleImageSelection(event) {
+        const files = Array.from(event.target.files);
+        
+        // Validate file types
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+        
+        if (invalidFiles.length > 0) {
+            this.uiManager.showError('Please select only image files (JPG, PNG, GIF)');
+            return;
+        }
+
+        // Validate file sizes (max 5MB per file)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const oversizedFiles = files.filter(file => file.size > maxSize);
+        
+        if (oversizedFiles.length > 0) {
+            this.uiManager.showError('Image files must be smaller than 5MB');
+            return;
+        }
+
+        // Add new images to selected images
+        this.selectedImages = [...this.selectedImages, ...files];
+        this.renderImagePreview();
+    }
+
+    renderImagePreview() {
+        const previewContainer = document.getElementById('imagePreview');
+        previewContainer.innerHTML = '';
+
+        if (this.selectedImages.length === 0) {
+            previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+            return;
+        }
+
+        this.selectedImages.forEach((file, index) => {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+            
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-image';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => this.removeImage(index);
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeBtn);
+            previewContainer.appendChild(previewItem);
+        });
+    }
+
+    removeImage(index) {
+        this.selectedImages.splice(index, 1);
+        this.renderImagePreview();
+    }
+
+    clearImagePreview() {
+        const previewContainer = document.getElementById('imagePreview');
+        previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
     }
 
     // Public methods for global access

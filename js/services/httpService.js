@@ -94,4 +94,34 @@ export class HttpService {
         
         return this.fetch(url, options);
     }
+
+    // POST request with FormData (for file uploads)
+    async postFormData(url, formData) {
+        const token = this.authService.getToken();
+        const options = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                // Don't set Content-Type - let browser set it with boundary for multipart/form-data
+            },
+            body: formData,
+        };
+        
+        return this.fetch(url, options);
+    }
+
+    // PUT request with FormData (for file uploads)
+    async putFormData(url, formData) {
+        const token = this.authService.getToken();
+        const options = {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                // Don't set Content-Type - let browser set it with boundary for multipart/form-data
+            },
+            body: formData,
+        };
+        
+        return this.fetch(url, options);
+    }
 }
