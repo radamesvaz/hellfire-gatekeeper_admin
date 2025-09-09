@@ -64,9 +64,12 @@ export class ProductService {
                 // Mock API call
                 await simulateApiDelay(800);
                 
+                // Process images for mock data
+                const processedData = this.processProductImages(productData);
+                
                 const newProduct = {
                     id: generateId(),
-                    ...productData,
+                    ...processedData,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
@@ -74,8 +77,9 @@ export class ProductService {
                 this.mockProducts.push(newProduct);
                 return newProduct;
             } else {
-                // Real API call using HttpService
-                const response = await this.httpService.post(`${this.baseURL}/products`, productData);
+                // Real API call using FormData for file uploads
+                const formData = this.createFormData(productData);
+                const response = await this.httpService.postFormData(`${this.baseURL}/auth/products`, formData);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -101,17 +105,21 @@ export class ProductService {
                     throw new Error('Product not found');
                 }
                 
+                // Process images for mock data
+                const processedData = this.processProductImages(productData);
+                
                 const updatedProduct = {
                     ...this.mockProducts[productIndex],
-                    ...productData,
+                    ...processedData,
                     updatedAt: new Date().toISOString()
                 };
                 
                 this.mockProducts[productIndex] = updatedProduct;
                 return updatedProduct;
             } else {
-                // Real API call using HttpService
-                const response = await this.httpService.put(`${this.baseURL}/products/${id}`, productData);
+                // Real API call using FormData for file uploads
+                const formData = this.createFormData(productData);
+                const response = await this.httpService.putFormData(`${this.baseURL}/products/${id}`, formData);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -191,7 +199,8 @@ export class ProductService {
             description: product.description,
             price: product.price,
             stock: product.stock,
-            imageUrl: product.image_url || this.getDummyImage(product.name),
+            imageUrl: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : null,
+            imageUrls: product.image_urls || [],
             status: product.status,
             available: product.available,
             createdAt: product.created_on
@@ -217,5 +226,52 @@ export class ProductService {
             // Default pastry image
             return 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=200&h=200&fit=crop&crop=center';
         }
+    }
+
+    // Process product images for mock data
+    processProductImages(productData) {
+        const processedData = { ...productData };
+        
+        if (productData.images && productData.images.length > 0) {
+            // For mock data, we'll simulate image URLs that match the backend format
+            const mockImageUrls = productData.images.map((file, index) => {
+                // Create mock URLs that match the backend pattern
+                return `/uploads/products/mock_${Date.now()}_${index}_${file.name}`;
+            });
+            
+            // Set the image_urls array to match backend format
+            processedData.image_urls = mockImageUrls;
+            
+            // Set the first image as the main image URL for backward compatibility
+            if (mockImageUrls.length > 0) {
+                processedData.imageUrl = mockImageUrls[0];
+            }
+            
+            // Remove the files array as we don't need it in the processed data
+            delete processedData.images;
+        }
+        
+        return processedData;
+    }
+
+    // Create FormData for file uploads
+    createFormData(productData) {
+        const formData = new FormData();
+        
+        // Add basic product fields
+        formData.append('name', productData.name);
+        formData.append('description', productData.description);
+        formData.append('price', productData.price);
+        formData.append('stock', productData.stock);
+        formData.append('status', productData.status);
+        
+        // Add images if they exist
+        if (productData.images && productData.images.length > 0) {
+            productData.images.forEach((file, index) => {
+                formData.append('images', file);
+            });
+        }
+        
+        return formData;
     }
 }

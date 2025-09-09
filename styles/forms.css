@@ -93,6 +93,89 @@
     margin-bottom: 0;
 }
 
+/* File Input Styles */
+.file-input {
+    padding: 0.5rem;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--surface-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.file-input:hover {
+    border-color: var(--primary-color);
+    background-color: rgb(139 92 246 / 0.05);
+}
+
+.file-input-info {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.file-input-info small {
+    font-size: 0.75rem;
+}
+
+/* Image Preview Styles */
+.image-preview-container {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+.image-preview-item {
+    position: relative;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.image-preview-item .remove-image {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    background-color: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: var(--transition);
+}
+
+.image-preview-item .remove-image:hover {
+    background-color: rgb(239, 68, 68);
+    transform: scale(1.1);
+}
+
+.image-preview-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 120px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-align: center;
+    background-color: var(--surface-color);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+}
+
 /* Responsive Form */
 @media (max-width: 640px) {
     .form-row {
@@ -105,5 +188,18 @@
     
     .form-actions .btn {
         width: 100%;
+    }
+    
+    .image-preview-container {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .image-preview-item img {
+        height: 100px;
+    }
+    
+    .image-preview-placeholder {
+        height: 100px;
     }
 }
