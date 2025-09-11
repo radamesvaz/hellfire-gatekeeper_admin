@@ -7,6 +7,9 @@ export class ProductManager {
         this.products = [];
         this.editingProduct = null;
         this.selectedImages = [];
+        this.currentStatusProduct = null;
+        this.pendingDeleteProduct = null;
+        this.undoTimeout = null;
         
         this.setupEventListeners();
     }
@@ -42,6 +45,50 @@ export class ProductManager {
         cancelProduct.addEventListener('click', () => {
             this.hideProductModal();
         });
+
+        // Product Status Modal event listeners
+        const closeProductStatusModal = document.getElementById('closeProductStatusModal');
+        const cancelProductStatus = document.getElementById('cancelProductStatus');
+        const setActiveBtn = document.getElementById('setActiveBtn');
+        const setInactiveBtn = document.getElementById('setInactiveBtn');
+        const setDeletedBtn = document.getElementById('setDeletedBtn');
+        
+        closeProductStatusModal.addEventListener('click', () => {
+            this.hideProductStatusModal();
+        });
+        
+        cancelProductStatus.addEventListener('click', () => {
+            this.hideProductStatusModal();
+        });
+
+        setActiveBtn.addEventListener('click', () => {
+            this.changeProductStatus('active');
+        });
+
+        setInactiveBtn.addEventListener('click', () => {
+            this.changeProductStatus('inactive');
+        });
+
+        setDeletedBtn.addEventListener('click', () => {
+            this.showDeleteConfirmationModal();
+        });
+
+        // Delete Confirmation Modal event listeners
+        const closeDeleteConfirmationModal = document.getElementById('closeDeleteConfirmationModal');
+        const cancelDeleteConfirmation = document.getElementById('cancelDeleteConfirmation');
+        const confirmDeleteProduct = document.getElementById('confirmDeleteProduct');
+        
+        closeDeleteConfirmationModal.addEventListener('click', () => {
+            this.hideDeleteConfirmationModal();
+        });
+        
+        cancelDeleteConfirmation.addEventListener('click', () => {
+            this.hideDeleteConfirmationModal();
+        });
+
+        confirmDeleteProduct.addEventListener('click', () => {
+            this.confirmDeleteProduct();
+        });
     }
 
     async loadProducts() {
@@ -61,7 +108,10 @@ export class ProductManager {
         const tbody = document.getElementById('productsTableBody');
         this.uiManager.clearTable('productsTableBody');
 
-        if (this.products.length === 0) {
+        // Filter out deleted products (logical delete)
+        const activeProducts = this.products.filter(product => product.status !== 'deleted');
+
+        if (activeProducts.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
@@ -72,7 +122,7 @@ export class ProductManager {
             return;
         }
 
-        this.products.forEach(product => {
+        activeProducts.forEach(product => {
             const row = this.createProductRow(product);
             tbody.appendChild(row);
         });
@@ -86,7 +136,10 @@ export class ProductManager {
         if (product.imageUrl) {
             const img = document.createElement('img');
             // Use the helper function to get the correct image URL
-            img.src = getImageUrl(product.imageUrl);
+            const imageUrl = getImageUrl(product.imageUrl);
+            console.log('Original imageUrl:', product.imageUrl);
+            console.log('Processed imageUrl:', imageUrl);
+            img.src = imageUrl;
             img.alt = product.name;
             img.className = 'product-image';
             img.onerror = () => {
@@ -125,7 +178,7 @@ export class ProductManager {
         actionsCell.innerHTML = `
             <div class="table-actions">
                 <button class="btn btn-primary btn-sm" onclick="window.productManager.editProduct('${product.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="window.productManager.deleteProduct('${product.id}')">Delete</button>
+                <button class="btn btn-secondary btn-sm" onclick="window.productManager.showStatusModal('${product.id}')">Status</button>
             </div>
         `;
 
@@ -150,12 +203,20 @@ export class ProductManager {
     }
 
     editProduct(productId) {
-        this.editingProduct = this.products.find(p => p.id === productId);
+        console.log('Edit product called with ID:', productId, 'Type:', typeof productId);
+        console.log('Available products:', this.products.map(p => ({ id: p.id, type: typeof p.id, name: p.name })));
+        
+        // Convert productId to number for comparison since backend returns numeric IDs
+        const numericProductId = parseInt(productId);
+        this.editingProduct = this.products.find(p => p.id === numericProductId);
+        
         if (!this.editingProduct) {
+            console.error('Product not found. Searched for:', numericProductId);
             this.uiManager.showError('Product not found');
             return;
         }
 
+        console.log('Found product:', this.editingProduct);
         document.getElementById('productModalTitle').textContent = 'Edit Product';
         this.populateProductForm(this.editingProduct);
         this.uiManager.showModal('productModal');
@@ -167,6 +228,7 @@ export class ProductManager {
         document.getElementById('productPrice').value = product.price;
         document.getElementById('productStock').value = product.stock;
         document.getElementById('productStatus').value = product.status;
+        document.getElementById('productAvailable').value = product.available ? 'true' : 'false';
         
         // Clear images for editing (we'll keep the existing imageUrl for display)
         this.selectedImages = [];
@@ -211,29 +273,255 @@ export class ProductManager {
         }
     }
 
-    async deleteProduct(productId) {
-        const product = this.products.find(p => p.id === productId);
+    showStatusModal(productId) {
+        // Convert productId to number for comparison since backend returns numeric IDs
+        const numericProductId = parseInt(productId);
+        const product = this.products.find(p => p.id === numericProductId);
         if (!product) {
             this.uiManager.showError('Product not found');
             return;
         }
 
-        // Confirm deletion
-        if (!confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
+        // Store the current product for status change
+        this.currentStatusProduct = product;
+
+        // Update modal content
+        document.getElementById('productStatusProductName').textContent = product.name;
+        document.getElementById('productStatusCurrentStatus').textContent = product.status;
+        document.getElementById('productStatusCurrentStatus').className = `status-badge status-${product.status}`;
+
+        // Enable/disable status buttons based on current status
+        this.updateStatusButtons(product.status);
+
+        // Show modal
+        this.uiManager.showModal('productStatusModal');
+    }
+
+    updateStatusButtons(currentStatus) {
+        const setActiveBtn = document.getElementById('setActiveBtn');
+        const setInactiveBtn = document.getElementById('setInactiveBtn');
+        const setDeletedBtn = document.getElementById('setDeletedBtn');
+
+        // Reset all buttons
+        setActiveBtn.disabled = false;
+        setInactiveBtn.disabled = false;
+        setDeletedBtn.disabled = false;
+
+        // Disable the current status button
+        switch (currentStatus) {
+            case 'active':
+                setActiveBtn.disabled = true;
+                break;
+            case 'inactive':
+                setInactiveBtn.disabled = true;
+                break;
+            case 'deleted':
+                setDeletedBtn.disabled = true;
+                break;
+        }
+    }
+
+    async changeProductStatus(newStatus) {
+        if (!this.currentStatusProduct) {
+            this.uiManager.showError('No product selected');
+            return;
+        }
+
+        const product = this.currentStatusProduct;
+        const currentStatus = product.status;
+
+        // Don't change if it's the same status
+        if (currentStatus === newStatus) {
+            this.hideProductStatusModal();
+            return;
+        }
+
+        // Handle delete status with confirmation modal
+        if (newStatus === 'deleted') {
+            this.showDeleteConfirmationModal();
             return;
         }
 
         try {
             this.uiManager.showLoading();
-            await this.productService.deleteProduct(productId);
-            this.uiManager.showSuccess('Product deleted successfully');
+            
+            // Use the existing updateProduct method to change status
+            const updatedProduct = await this.productService.updateProduct(product.id, {
+                ...product,
+                status: newStatus
+            });
+
+            // Show success message based on the action
+            let successMessage = '';
+            switch (newStatus) {
+                case 'active':
+                    successMessage = 'Product activated successfully';
+                    break;
+                case 'inactive':
+                    successMessage = 'Product deactivated successfully';
+                    break;
+                default:
+                    successMessage = 'Product status updated successfully';
+            }
+
+            this.uiManager.showSuccess(successMessage);
+            this.hideProductStatusModal();
             await this.loadProducts(); // Reload products
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
+            this.uiManager.showError(error.message || 'Failed to update product status');
+            console.error('Change product status error:', error);
+        }
+    }
+
+    showDeleteConfirmationModal() {
+        if (!this.currentStatusProduct) {
+            this.uiManager.showError('No product selected');
+            return;
+        }
+
+        // Store the product for deletion
+        this.pendingDeleteProduct = this.currentStatusProduct;
+
+        // Update modal content
+        document.getElementById('deleteConfirmationProductName').textContent = this.pendingDeleteProduct.name;
+
+        // Hide status modal and show delete confirmation modal
+        this.hideProductStatusModal();
+        this.uiManager.showModal('deleteConfirmationModal');
+    }
+
+    hideDeleteConfirmationModal() {
+        this.uiManager.hideModal('deleteConfirmationModal');
+        this.pendingDeleteProduct = null;
+    }
+
+    async confirmDeleteProduct() {
+        if (!this.pendingDeleteProduct) {
+            this.uiManager.showError('No product selected for deletion');
+            return;
+        }
+
+        const product = this.pendingDeleteProduct;
+        const previousStatus = product.status;
+
+        try {
+            this.uiManager.showLoading();
+            
+            // Mark product as deleted
+            await this.productService.updateProduct(product.id, {
+                ...product,
+                status: 'deleted'
+            });
+
+            this.hideDeleteConfirmationModal();
+            await this.loadProducts(); // Reload products
+            this.uiManager.hideLoading();
+
+            // Show undo notification
+            this.showUndoNotification(product, previousStatus);
+
+        } catch (error) {
+            this.uiManager.hideLoading();
             this.uiManager.showError(error.message || 'Failed to delete product');
             console.error('Delete product error:', error);
+            this.hideDeleteConfirmationModal();
         }
+    }
+
+    showUndoNotification(product, previousStatus) {
+        // Clear any existing undo timeout
+        if (this.undoTimeout) {
+            clearTimeout(this.undoTimeout);
+        }
+
+        // Create undo notification element
+        const notification = document.createElement('div');
+        notification.className = 'undo-notification';
+        notification.innerHTML = `
+            <div class="undo-notification-content">
+                <h4 class="undo-notification-title">Product Deleted</h4>
+                <p class="undo-notification-message">"${product.name}" has been marked as deleted.</p>
+            </div>
+            <div class="undo-notification-actions">
+                <span class="undo-notification-countdown" id="undoCountdown">10</span>
+                <button class="undo-btn" id="undoDeleteBtn">Undo</button>
+            </div>
+        `;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Set up undo button
+        const undoBtn = notification.querySelector('#undoDeleteBtn');
+        const countdownElement = notification.querySelector('#undoCountdown');
+        
+        undoBtn.addEventListener('click', () => {
+            this.undoDelete(product, previousStatus);
+            this.hideUndoNotification(notification);
+        });
+
+        // Start countdown
+        let countdown = 10;
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                this.hideUndoNotification(notification);
+            }
+        }, 1000);
+
+        // Auto-hide after 10 seconds
+        this.undoTimeout = setTimeout(() => {
+            clearInterval(countdownInterval);
+            this.hideUndoNotification(notification);
+        }, 10000);
+    }
+
+    async undoDelete(product, previousStatus) {
+        try {
+            this.uiManager.showLoading();
+            
+            // Restore product to previous status
+            await this.productService.updateProduct(product.id, {
+                ...product,
+                status: previousStatus
+            });
+
+            await this.loadProducts(); // Reload products
+            this.uiManager.hideLoading();
+            this.uiManager.showSuccess(`Product "${product.name}" has been restored`);
+
+        } catch (error) {
+            this.uiManager.hideLoading();
+            this.uiManager.showError('Failed to restore product');
+            console.error('Undo delete error:', error);
+        }
+    }
+
+    hideUndoNotification(notification) {
+        if (notification && notification.parentNode) {
+            notification.classList.add('hiding');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+        
+        // Clear timeout
+        if (this.undoTimeout) {
+            clearTimeout(this.undoTimeout);
+            this.undoTimeout = null;
+        }
+    }
+
+    hideProductStatusModal() {
+        this.uiManager.hideModal('productStatusModal');
+        this.currentStatusProduct = null;
     }
 
     hideProductModal() {

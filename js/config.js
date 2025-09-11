@@ -83,6 +83,7 @@ export const config = {
             maxPrice: 9999.99,
             minStock: 0,
             maxStock: 9999,
+            validStatuses: ['active', 'inactive', 'deleted'],
         },
         order: {
             validStatuses: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
@@ -99,16 +100,19 @@ export const getApiUrl = (endpoint) => {
 export const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     
+    console.log('getImageUrl input:', imagePath);
+    
     // If it's already a full URL, return as is
     if (imagePath.startsWith('http')) {
         return imagePath;
     }
     
-    // Clean the path (remove spaces and encode properly)
-    const cleanPath = imagePath.replace(/\s+/g, '%20');
+    // Simply prepend the base URL. We expect imagePath to be clean already.
+    const fullUrl = `${config.api.baseURL}${imagePath}`;
+    console.log('getImageUrl output:', fullUrl);
     
     // Return full URL with backend base
-    return `${config.api.baseURL}${cleanPath}`;
+    return fullUrl;
 };
 
 // Helper function to get auth headers

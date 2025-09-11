@@ -82,8 +82,10 @@ export class ProductService {
                 const response = await this.httpService.postFormData(`${this.baseURL}/auth/products`, formData);
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to create product');
+                    // Get the error message from response
+                    const errorText = await response.text();
+                    console.log('Backend error response:', errorText);
+                    throw new Error(errorText || 'Failed to create product');
                 }
 
                 return await response.json();
@@ -119,11 +121,13 @@ export class ProductService {
             } else {
                 // Real API call using FormData for file uploads
                 const formData = this.createFormData(productData);
-                const response = await this.httpService.putFormData(`${this.baseURL}/products/${id}`, formData);
+                const response = await this.httpService.putFormData(`${this.baseURL}/auth/products/${id}`, formData);
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to update product');
+                    // Get the error message from response
+                    const errorText = await response.text();
+                    console.log('Backend error response:', errorText);
+                    throw new Error(errorText || 'Failed to update product');
                 }
 
                 return await response.json();
@@ -137,7 +141,7 @@ export class ProductService {
     async deleteProduct(id) {
         try {
             if (this.useMockData) {
-                // Mock API call
+                // Mock API call - logical delete by changing status
                 await simulateApiDelay(500);
                 
                 const productIndex = this.mockProducts.findIndex(p => p.id === id);
@@ -145,18 +149,22 @@ export class ProductService {
                     throw new Error('Product not found');
                 }
                 
-                this.mockProducts.splice(productIndex, 1);
-                return true;
+                // Change status to 'deleted' instead of removing from array
+                this.mockProducts[productIndex].status = 'deleted';
+                this.mockProducts[productIndex].updatedAt = new Date().toISOString();
+                return this.mockProducts[productIndex];
             } else {
-                // Real API call using HttpService
-                const response = await this.httpService.delete(`${this.baseURL}/products/${id}`);
+                // Real API call using PATCH method for logical delete
+                const response = await this.httpService.patch(`${this.baseURL}/auth/products/${id}`, {
+                    status: 'deleted'
+                });
 
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.message || 'Failed to delete product');
                 }
 
-                return true;
+                return await response.json();
             }
         } catch (error) {
             console.error('Delete product error:', error);
@@ -193,18 +201,35 @@ export class ProductService {
 
     // Transform server data to match our expected format
     transformProductsData(serverProducts) {
-        return serverProducts.map(product => ({
-            id: product.id_product,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            stock: product.stock,
-            imageUrl: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : null,
-            imageUrls: product.image_urls || [],
-            status: product.status,
-            available: product.available,
-            createdAt: product.created_on
-        }));
+        return serverProducts.map(product => {
+            console.log('Raw product from backend:', product);
+            console.log('Raw image_urls:', product.image_urls);
+            
+            // Clean image URLs - replace spaces with underscores
+            const cleanImageUrls = product.image_urls ? 
+                product.image_urls.map(url => {
+                    console.log('Original URL:', url);
+                    const cleaned = url.replace(/\s+/g, '_');
+                    console.log('Cleaned URL:', cleaned);
+                    return cleaned;
+                }) : [];
+            
+            const transformedProduct = {
+                id: product.id_product,
+                name: product.name,
+                description: product.description,
+                price: product.price,
+                stock: product.stock,
+                imageUrl: cleanImageUrls.length > 0 ? cleanImageUrls[0] : null,
+                imageUrls: cleanImageUrls,
+                status: product.status,
+                available: product.available,
+                createdAt: product.created_on
+            };
+            
+            console.log('Transformed product:', transformedProduct);
+            return transformedProduct;
+        });
     }
 
     // Get dummy image based on product name
@@ -258,18 +283,30 @@ export class ProductService {
     createFormData(productData) {
         const formData = new FormData();
         
-        // Add basic product fields
+        // Add basic product fields (matching backend expectations)
         formData.append('name', productData.name);
         formData.append('description', productData.description);
         formData.append('price', productData.price);
         formData.append('stock', productData.stock);
         formData.append('status', productData.status);
         
-        // Add images if they exist
+        // Convert available to boolean if it's a string
+        const availableValue = productData.available !== undefined ? 
+            (typeof productData.available === 'string' ? productData.available === 'true' : productData.available) : 
+            true;
+        formData.append('available', availableValue);
+        
+        // Add images if they exist (using "images" field name as expected by backend)
         if (productData.images && productData.images.length > 0) {
             productData.images.forEach((file, index) => {
                 formData.append('images', file);
             });
+        }
+        
+        // Debug: Log FormData contents
+        console.log('FormData contents:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
         }
         
         return formData;

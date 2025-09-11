@@ -163,6 +163,13 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="productAvailable">Available</label>
+                    <select id="productAvailable" name="available" required>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="productImages">Product Images</label>
                     <input type="file" id="productImages" name="images" multiple accept="image/*" class="file-input">
                     <div class="file-input-info">
@@ -177,6 +184,78 @@
                     <button type="submit" class="btn btn-primary">Save Product</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Product Status Modal -->
+    <div id="productStatusModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="productStatusModalTitle">Change Product Status</h3>
+                <button class="modal-close" id="closeProductStatusModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="product-info">
+                    <h4 id="productStatusProductName">Product Name</h4>
+                    <p>Current Status: <span id="productStatusCurrentStatus" class="status-badge">active</span></p>
+                </div>
+                <div class="status-options">
+                    <h5>Available Actions:</h5>
+                    <div class="status-actions">
+                        <button class="status-action-btn" data-status="active" id="setActiveBtn">
+                            <span class="status-icon">✓</span>
+                            <span class="status-text">Set as Active</span>
+                            <span class="status-description">Make product visible and available for purchase</span>
+                        </button>
+                        <button class="status-action-btn" data-status="inactive" id="setInactiveBtn">
+                            <span class="status-icon">⏸</span>
+                            <span class="status-text">Set as Inactive</span>
+                            <span class="status-description">Hide product from customers but keep it in the system</span>
+                        </button>
+                        <button class="status-action-btn status-delete" data-status="deleted" id="setDeletedBtn">
+                            <span class="status-icon">🗑</span>
+                            <span class="status-text">Mark as Deleted</span>
+                            <span class="status-description">Remove product from main view (logical delete)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelProductStatus">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmationModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Product Deletion</h3>
+                <button class="modal-close" id="closeDeleteConfirmationModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <div class="warning-icon">⚠️</div>
+                    <h4 id="deleteConfirmationProductName">Product Name</h4>
+                    <p>Are you sure you want to mark this product as deleted?</p>
+                </div>
+                <div class="delete-consequences">
+                    <h5>What will happen:</h5>
+                    <ul>
+                        <li>✅ Product will be hidden from the main product list</li>
+                        <li>✅ Product will not be visible to customers</li>
+                        <li>✅ Product data will be preserved (logical delete)</li>
+                        <li>✅ Product can be restored later if needed</li>
+                    </ul>
+                </div>
+                <div class="delete-note">
+                    <p><strong>Note:</strong> You can undo this action within 10 seconds after confirmation, or restore the product manually later.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelDeleteConfirmation">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteProduct">Yes, Mark as Deleted</button>
+            </div>
         </div>
     </div>
 
