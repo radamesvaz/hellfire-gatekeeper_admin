@@ -100,19 +100,13 @@ export const getApiUrl = (endpoint) => {
 export const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     
-    console.log('getImageUrl input:', imagePath);
-    
     // If it's already a full URL, return as is
     if (imagePath.startsWith('http')) {
         return imagePath;
     }
     
     // Simply prepend the base URL. We expect imagePath to be clean already.
-    const fullUrl = `${config.api.baseURL}${imagePath}`;
-    console.log('getImageUrl output:', fullUrl);
-    
-    // Return full URL with backend base
-    return fullUrl;
+    return `${config.api.baseURL}${imagePath}`;
 };
 
 // Helper function to get auth headers

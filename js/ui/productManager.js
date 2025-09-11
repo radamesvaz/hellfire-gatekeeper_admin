@@ -136,14 +136,10 @@ export class ProductManager {
         if (product.imageUrl) {
             const img = document.createElement('img');
             // Use the helper function to get the correct image URL
-            const imageUrl = getImageUrl(product.imageUrl);
-            console.log('Original imageUrl:', product.imageUrl);
-            console.log('Processed imageUrl:', imageUrl);
-            img.src = imageUrl;
+            img.src = getImageUrl(product.imageUrl);
             img.alt = product.name;
             img.className = 'product-image';
             img.onerror = () => {
-                console.log('Failed to load image:', img.src);
                 img.style.display = 'none';
                 imageCell.innerHTML = '<div class="product-image-placeholder">No Image</div>';
             };
@@ -203,20 +199,15 @@ export class ProductManager {
     }
 
     editProduct(productId) {
-        console.log('Edit product called with ID:', productId, 'Type:', typeof productId);
-        console.log('Available products:', this.products.map(p => ({ id: p.id, type: typeof p.id, name: p.name })));
-        
         // Convert productId to number for comparison since backend returns numeric IDs
         const numericProductId = parseInt(productId);
         this.editingProduct = this.products.find(p => p.id === numericProductId);
         
         if (!this.editingProduct) {
-            console.error('Product not found. Searched for:', numericProductId);
             this.uiManager.showError('Product not found');
             return;
         }
 
-        console.log('Found product:', this.editingProduct);
         document.getElementById('productModalTitle').textContent = 'Edit Product';
         this.populateProductForm(this.editingProduct);
         this.uiManager.showModal('productModal');

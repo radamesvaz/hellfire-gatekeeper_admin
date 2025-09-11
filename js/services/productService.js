@@ -202,19 +202,11 @@ export class ProductService {
     // Transform server data to match our expected format
     transformProductsData(serverProducts) {
         return serverProducts.map(product => {
-            console.log('Raw product from backend:', product);
-            console.log('Raw image_urls:', product.image_urls);
-            
             // Clean image URLs - replace spaces with underscores
             const cleanImageUrls = product.image_urls ? 
-                product.image_urls.map(url => {
-                    console.log('Original URL:', url);
-                    const cleaned = url.replace(/\s+/g, '_');
-                    console.log('Cleaned URL:', cleaned);
-                    return cleaned;
-                }) : [];
+                product.image_urls.map(url => url.replace(/\s+/g, '_')) : [];
             
-            const transformedProduct = {
+            return {
                 id: product.id_product,
                 name: product.name,
                 description: product.description,
@@ -226,9 +218,6 @@ export class ProductService {
                 available: product.available,
                 createdAt: product.created_on
             };
-            
-            console.log('Transformed product:', transformedProduct);
-            return transformedProduct;
         });
     }
 
@@ -303,11 +292,6 @@ export class ProductService {
             });
         }
         
-        // Debug: Log FormData contents
-        console.log('FormData contents:');
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
-        }
         
         return formData;
     }
