@@ -4,6 +4,7 @@ export class OrderManager {
         this.uiManager = uiManager;
         this.orders = [];
         this.editingOrder = null;
+        this.currentOrderDetails = null;
         
         this.setupEventListeners();
     }
@@ -16,7 +17,31 @@ export class OrderManager {
             this.handleOrderStatusSubmit();
         });
 
-        // Modal close buttons
+        // Order details modal close buttons
+        const closeOrderDetailsModal = document.getElementById('closeOrderDetailsModal');
+        const cancelOrderDetails = document.getElementById('cancelOrderDetails');
+        const updateOrderStatusBtn = document.getElementById('updateOrderStatusBtn');
+        
+        closeOrderDetailsModal.addEventListener('click', () => {
+            this.hideOrderDetailsModal();
+        });
+        
+        cancelOrderDetails.addEventListener('click', () => {
+            this.hideOrderDetailsModal();
+        });
+
+        updateOrderStatusBtn.addEventListener('click', () => {
+            // Store the order ID before closing the modal
+            const orderId = this.currentOrderDetails ? this.currentOrderDetails.id : null;
+            this.hideOrderDetailsModal();
+            if (orderId) {
+                this.editOrderStatus(orderId);
+            } else {
+                console.error('No order details available for status update');
+            }
+        });
+
+        // Order status modal close buttons
         const closeOrderModal = document.getElementById('closeOrderModal');
         const cancelOrderStatus = document.getElementById('cancelOrderStatus');
         
@@ -49,7 +74,7 @@ export class OrderManager {
         if (this.orders.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                         No orders found. Orders will appear here when customers place them.
                     </td>
                 </tr>
@@ -57,7 +82,10 @@ export class OrderManager {
             return;
         }
 
-        this.orders.forEach(order => {
+        // Sort orders by ID in descending order (newest first)
+        const sortedOrders = [...this.orders].sort((a, b) => b.id - a.id);
+
+        sortedOrders.forEach(order => {
             const row = this.createOrderRow(order);
             tbody.appendChild(row);
         });
@@ -65,51 +93,55 @@ export class OrderManager {
 
     createOrderRow(order) {
         const row = document.createElement('tr');
+        row.className = 'clickable-row';
+        row.style.cursor = 'pointer';
         
-        // Order ID
-        const idCell = document.createElement('td');
-        idCell.textContent = order.id;
+        // Add click event to show order details
+        row.addEventListener('click', () => {
+            this.showOrderDetails(order);
+        });
 
-        // Customer
+        // Delivery Date (using order date as delivery date for now)
+        const deliveryDateCell = document.createElement('td');
+        const orderDate = new Date(order.date);
+        deliveryDateCell.innerHTML = `
+            <div>
+                <div><strong>${orderDate.getDate()}/${orderDate.getMonth() + 1}</strong></div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">${orderDate.getFullYear()}</div>
+            </div>
+        `;
+
+        // Customer Name
         const customerCell = document.createElement('td');
         customerCell.innerHTML = `
             <div>
                 <div><strong>${order.customer}</strong></div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">ID: ${order.userId}</div>
             </div>
         `;
 
-        // Items
-        const itemsCell = document.createElement('td');
-        itemsCell.innerHTML = this.renderOrderItems(order.items);
-
-        // Total
-        const totalCell = document.createElement('td');
-        totalCell.innerHTML = `<span class="price-column">${this.uiManager.formatPrice(order.total)}</span>`;
+        // Product (show first item or summary)
+        const productCell = document.createElement('td');
+        if (order.items && order.items.length > 0) {
+            const firstItem = order.items[0];
+            const itemCount = order.items.length;
+            productCell.innerHTML = `
+                <div>
+                    <div><strong>${firstItem.name}</strong></div>
+                    ${itemCount > 1 ? `<div style="font-size: 0.75rem; color: var(--text-secondary);">+${itemCount - 1} more</div>` : ''}
+                </div>
+            `;
+        } else {
+            productCell.innerHTML = '<span style="color: var(--text-secondary);">No items</span>';
+        }
 
         // Status
         const statusCell = document.createElement('td');
         statusCell.innerHTML = `<span class="status-badge status-${order.status}">${order.status}</span>`;
 
-        // Date
-        const dateCell = document.createElement('td');
-        dateCell.textContent = this.uiManager.formatDate(order.date);
-
-        // Actions
-        const actionsCell = document.createElement('td');
-        actionsCell.innerHTML = `
-            <div class="table-actions">
-                <button class="btn btn-primary btn-sm" onclick="window.orderManager.editOrderStatus('${order.id}')">Update Status</button>
-            </div>
-        `;
-
-        row.appendChild(idCell);
+        row.appendChild(deliveryDateCell);
         row.appendChild(customerCell);
-        row.appendChild(itemsCell);
-        row.appendChild(totalCell);
+        row.appendChild(productCell);
         row.appendChild(statusCell);
-        row.appendChild(dateCell);
-        row.appendChild(actionsCell);
 
         return row;
     }
@@ -165,6 +197,76 @@ export class OrderManager {
             this.uiManager.showError(error.message || 'Failed to update order status');
             console.error('Order status update error:', error);
         }
+    }
+
+    showOrderDetails(order) {
+        this.currentOrderDetails = order;
+        
+        // Populate order details
+        document.getElementById('orderDetailsId').textContent = order.id;
+        document.getElementById('orderDetailsDate').textContent = this.uiManager.formatDate(order.date);
+        
+        // Set delivery date (using order date + 1 day as example)
+        const orderDate = new Date(order.date);
+        const deliveryDate = new Date(orderDate);
+        deliveryDate.setDate(deliveryDate.getDate() + 1);
+        document.getElementById('orderDetailsDeliveryDate').textContent = this.uiManager.formatDate(deliveryDate);
+        
+        document.getElementById('orderDetailsTotal').textContent = this.uiManager.formatPrice(order.total);
+        document.getElementById('orderDetailsStatus').textContent = order.status;
+        document.getElementById('orderDetailsStatus').className = `status-badge status-${order.status}`;
+        document.getElementById('orderDetailsCustomer').textContent = order.customer;
+        document.getElementById('orderDetailsCustomerId').textContent = order.userId;
+        
+        // Populate order notes
+        const notesContainer = document.getElementById('orderDetailsNotes');
+        if (order.note && order.note.trim() !== '') {
+            notesContainer.innerHTML = `
+                <div class="notes-content">
+                    <p>${order.note}</p>
+                </div>
+            `;
+        } else {
+            notesContainer.innerHTML = '<div class="no-notes">No hay notas para esta orden</div>';
+        }
+        
+        // Populate order items
+        const itemsContainer = document.getElementById('orderDetailsItems');
+        if (order.items && order.items.length > 0) {
+            let subtotal = 0;
+            let totalItems = 0;
+            
+            itemsContainer.innerHTML = order.items.map(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                totalItems += item.quantity;
+                
+                return `
+                    <div class="order-item-detail">
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-details">Cantidad: ${item.quantity} | Precio unitario: ${this.uiManager.formatPrice(item.price)}</div>
+                        </div>
+                        <div class="item-total">${this.uiManager.formatPrice(itemTotal)}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update summary
+            document.getElementById('orderDetailsSubtotal').textContent = this.uiManager.formatPrice(subtotal);
+            document.getElementById('orderDetailsItemCount').textContent = totalItems;
+        } else {
+            itemsContainer.innerHTML = '<div class="no-items">No hay productos en esta orden</div>';
+            document.getElementById('orderDetailsSubtotal').textContent = this.uiManager.formatPrice(0);
+            document.getElementById('orderDetailsItemCount').textContent = '0';
+        }
+        
+        this.uiManager.showModal('orderDetailsModal');
+    }
+
+    hideOrderDetailsModal() {
+        this.uiManager.hideModal('orderDetailsModal');
+        this.currentOrderDetails = null;
     }
 
     hideOrderStatusModal() {

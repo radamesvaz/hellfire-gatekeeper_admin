@@ -86,11 +86,8 @@
                             <tr>
                                 <th>Image</th>
                                 <th>Name</th>
-                                <th>Description</th>
                                 <th>Price</th>
                                 <th>Status</th>
-                                <th>Stock</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="productsTableBody">
@@ -109,13 +106,10 @@
                     <table id="ordersTable" class="data-table">
                         <thead>
                             <tr>
-                                <th>Order ID</th>
+                                <th>Delivery Date</th>
                                 <th>Customer</th>
-                                <th>Items</th>
-                                <th>Total</th>
+                                <th>Product</th>
                                 <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="ordersTableBody">
@@ -125,6 +119,68 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Product Details Modal -->
+    <div id="productDetailsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Product Details</h3>
+                <button class="modal-close" id="closeProductDetailsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="product-details">
+                    <div class="product-info-section">
+                        <h4>Product Information</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Product ID:</label>
+                                <span id="productDetailsId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Name:</label>
+                                <span id="productDetailsName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Price:</label>
+                                <span id="productDetailsPrice" class="price-column">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Stock:</label>
+                                <span id="productDetailsStock">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Status:</label>
+                                <span id="productDetailsStatus" class="status-badge">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Available:</label>
+                                <span id="productDetailsAvailable">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="description-section">
+                        <h4>Description</h4>
+                        <div id="productDetailsDescription" class="product-description">
+                            <!-- Description will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="images-section">
+                        <h4>Product Images</h4>
+                        <div id="productDetailsImages" class="product-images-detail">
+                            <!-- Images will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelProductDetails">Close</button>
+                <button type="button" class="btn btn-primary" id="editProductBtn">Edit Product</button>
+                <button type="button" class="btn btn-secondary" id="changeProductStatusBtn">Change Status</button>
+            </div>
+        </div>
     </div>
 
     <!-- Product Modal -->
@@ -255,6 +311,87 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancelDeleteConfirmation">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirmDeleteProduct">Yes, Mark as Deleted</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalles de la Orden</h3>
+                <button class="modal-close" id="closeOrderDetailsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="order-details">
+                    <div class="order-info-section">
+                        <h4>Información de la Orden</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>ID de Orden:</label>
+                                <span id="orderDetailsId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Fecha de Orden:</label>
+                                <span id="orderDetailsDate">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Fecha de Entrega:</label>
+                                <span id="orderDetailsDeliveryDate">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Total:</label>
+                                <span id="orderDetailsTotal" class="price-column">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Estado:</label>
+                                <span id="orderDetailsStatus" class="status-badge">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="customer-info-section">
+                        <h4>Información del Cliente</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Nombre del Cliente:</label>
+                                <span id="orderDetailsCustomer">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>ID del Cliente:</label>
+                                <span id="orderDetailsCustomerId">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-section">
+                        <h4>Notas de la Orden</h4>
+                        <div id="orderDetailsNotes" class="order-notes">
+                            <!-- Notes will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="items-section">
+                        <h4>Productos de la Orden</h4>
+                        <div id="orderDetailsItems" class="order-items-detail">
+                            <!-- Items will be populated here -->
+                        </div>
+                        <div class="order-summary">
+                            <div class="summary-row">
+                                <label>Subtotal:</label>
+                                <span id="orderDetailsSubtotal" class="price-column">-</span>
+                            </div>
+                            <div class="summary-row">
+                                <label>Total de Artículos:</label>
+                                <span id="orderDetailsItemCount">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelOrderDetails">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="updateOrderStatusBtn">Actualizar Estado</button>
             </div>
         </div>
     </div>

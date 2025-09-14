@@ -32,8 +32,11 @@ export class OrderService {
                 }
 
                 const orders = await response.json();
+                console.log('Raw orders data from API:', orders);
                 // Transform server data to match our expected format
-                return this.transformOrdersData(orders);
+                const transformedOrders = this.transformOrdersData(orders);
+                console.log('Transformed orders data:', transformedOrders);
+                return transformedOrders;
             }
         } catch (error) {
             console.error('Get orders error:', error);
@@ -163,7 +166,7 @@ export class OrderService {
         return serverOrders.map(order => ({
             id: order.id_order,
             customer: order.user_name,
-            items: this.transformOrderItems(order.OrderItems || []),
+            items: this.transformOrderItems(order.OrderItems || [], order.total_price),
             total: order.total_price,
             status: order.status,
             date: order.created_on,
@@ -174,14 +177,28 @@ export class OrderService {
     }
 
     // Transform order items from server format
-    transformOrderItems(serverItems) {
-        return serverItems.map(item => ({
-            id: item.id_order_item,
-            productId: item.id_product,
-            quantity: item.quantity || 1,
-            price: item.price || 0,
-            name: item.product_name || 'Unknown Product'
-        }));
+    transformOrderItems(serverItems, orderTotal = 0) {
+        console.log('Transforming order items:', serverItems, 'with total:', orderTotal);
+        return serverItems.map(item => {
+            console.log('Processing item:', item);
+            // If no individual price is provided, calculate it from total
+            let itemPrice = item.price || 0;
+            if (itemPrice === 0 && orderTotal > 0 && serverItems.length > 0) {
+                // Calculate price per unit based on total quantity
+                const totalQuantity = serverItems.reduce((sum, i) => sum + (i.quantity || 1), 0);
+                itemPrice = orderTotal / totalQuantity;
+            }
+            
+            const transformedItem = {
+                id: item.id_order_item,
+                productId: item.id_product,
+                quantity: item.quantity || 1,
+                price: itemPrice,
+                name: item.name || 'Unknown Product'
+            };
+            console.log('Transformed item:', transformedItem);
+            return transformedItem;
+        });
     }
 
     // Helper method to get items summary for display
