@@ -9,6 +9,7 @@ export class ProductManager {
         this.selectedImages = [];
         this.currentStatusProduct = null;
         this.pendingDeleteProduct = null;
+        this.currentProductDetails = null;
         this.undoTimeout = null;
         
         this.setupEventListeners();
@@ -89,6 +90,42 @@ export class ProductManager {
         confirmDeleteProduct.addEventListener('click', () => {
             this.confirmDeleteProduct();
         });
+
+        // Product Details Modal event listeners
+        const closeProductDetailsModal = document.getElementById('closeProductDetailsModal');
+        const cancelProductDetails = document.getElementById('cancelProductDetails');
+        const editProductBtn = document.getElementById('editProductBtn');
+        const changeProductStatusBtn = document.getElementById('changeProductStatusBtn');
+        
+        closeProductDetailsModal.addEventListener('click', () => {
+            this.hideProductDetailsModal();
+        });
+        
+        cancelProductDetails.addEventListener('click', () => {
+            this.hideProductDetailsModal();
+        });
+
+        editProductBtn.addEventListener('click', () => {
+            // Store the product ID before closing the modal
+            const productId = this.currentProductDetails ? this.currentProductDetails.id : null;
+            this.hideProductDetailsModal();
+            if (productId) {
+                this.editProduct(productId);
+            } else {
+                console.error('No product details available for editing');
+            }
+        });
+
+        changeProductStatusBtn.addEventListener('click', () => {
+            // Store the product ID before closing the modal
+            const productId = this.currentProductDetails ? this.currentProductDetails.id : null;
+            this.hideProductDetailsModal();
+            if (productId) {
+                this.showStatusModal(productId);
+            } else {
+                console.error('No product details available for status change');
+            }
+        });
     }
 
     async loadProducts() {
@@ -114,7 +151,7 @@ export class ProductManager {
         if (activeProducts.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                         No products found. Add your first product to get started.
                     </td>
                 </tr>
@@ -130,7 +167,14 @@ export class ProductManager {
 
     createProductRow(product) {
         const row = document.createElement('tr');
+        row.className = 'clickable-row';
+        row.style.cursor = 'pointer';
         
+        // Add click event to show product details
+        row.addEventListener('click', () => {
+            this.showProductDetails(product);
+        });
+
         // Product image
         const imageCell = document.createElement('td');
         if (product.imageUrl) {
@@ -150,11 +194,12 @@ export class ProductManager {
 
         // Product name
         const nameCell = document.createElement('td');
-        nameCell.textContent = product.name;
-
-        // Description
-        const descCell = document.createElement('td');
-        descCell.innerHTML = `<div class="table-content" title="${product.description}">${this.uiManager.truncateText(product.description, 60)}</div>`;
+        nameCell.innerHTML = `
+            <div>
+                <div><strong>${product.name}</strong></div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">ID: ${product.id}</div>
+            </div>
+        `;
 
         // Price
         const priceCell = document.createElement('td');
@@ -164,27 +209,10 @@ export class ProductManager {
         const statusCell = document.createElement('td');
         statusCell.innerHTML = `<span class="status-badge status-${product.status}">${product.status}</span>`;
 
-        // Stock
-        const stockCell = document.createElement('td');
-        const stockClass = product.stock === 0 ? 'stock-out' : product.stock < 10 ? 'stock-low' : '';
-        stockCell.innerHTML = `<span class="stock-column ${stockClass}">${product.stock}</span>`;
-
-        // Actions
-        const actionsCell = document.createElement('td');
-        actionsCell.innerHTML = `
-            <div class="table-actions">
-                <button class="btn btn-primary btn-sm" onclick="window.productManager.editProduct('${product.id}')">Edit</button>
-                <button class="btn btn-secondary btn-sm" onclick="window.productManager.showStatusModal('${product.id}')">Status</button>
-            </div>
-        `;
-
         row.appendChild(imageCell);
         row.appendChild(nameCell);
-        row.appendChild(descCell);
         row.appendChild(priceCell);
         row.appendChild(statusCell);
-        row.appendChild(stockCell);
-        row.appendChild(actionsCell);
 
         return row;
     }
@@ -221,9 +249,9 @@ export class ProductManager {
         document.getElementById('productStatus').value = product.status;
         document.getElementById('productAvailable').value = product.available ? 'true' : 'false';
         
-        // Clear images for editing (we'll keep the existing imageUrl for display)
+        // Show existing images in the preview
         this.selectedImages = [];
-        this.clearImagePreview();
+        this.showExistingImages(product);
     }
 
     async handleProductSubmit() {
@@ -515,6 +543,42 @@ export class ProductManager {
         this.currentStatusProduct = null;
     }
 
+    showProductDetails(product) {
+        this.currentProductDetails = product;
+        
+        // Populate product details
+        document.getElementById('productDetailsId').textContent = product.id;
+        document.getElementById('productDetailsName').textContent = product.name;
+        document.getElementById('productDetailsPrice').textContent = this.uiManager.formatPrice(product.price);
+        document.getElementById('productDetailsStock').textContent = product.stock;
+        document.getElementById('productDetailsStatus').textContent = product.status;
+        document.getElementById('productDetailsStatus').className = `status-badge status-${product.status}`;
+        document.getElementById('productDetailsAvailable').textContent = product.available ? 'Yes' : 'No';
+        
+        // Populate description
+        const descriptionContainer = document.getElementById('productDetailsDescription');
+        descriptionContainer.textContent = product.description;
+        
+        // Populate images
+        const imagesContainer = document.getElementById('productDetailsImages');
+        if (product.imageUrl) {
+            imagesContainer.innerHTML = `
+                <div class="product-image-detail">
+                    <img src="${getImageUrl(product.imageUrl)}" alt="${product.name}" class="product-detail-image">
+                </div>
+            `;
+        } else {
+            imagesContainer.innerHTML = '<div class="no-images">No images available</div>';
+        }
+        
+        this.uiManager.showModal('productDetailsModal');
+    }
+
+    hideProductDetailsModal() {
+        this.uiManager.hideModal('productDetailsModal');
+        this.currentProductDetails = null;
+    }
+
     hideProductModal() {
         this.uiManager.hideModal('productModal');
         this.editingProduct = null;
@@ -553,11 +617,28 @@ export class ProductManager {
         const previewContainer = document.getElementById('imagePreview');
         previewContainer.innerHTML = '';
 
-        if (this.selectedImages.length === 0) {
-            previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
-            return;
+        // Show existing images if editing a product
+        if (this.editingProduct && this.editingProduct.imageUrls && this.editingProduct.imageUrls.length > 0) {
+            this.editingProduct.imageUrls.forEach((imageUrl, index) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'image-preview-item';
+                
+                const img = document.createElement('img');
+                img.src = getImageUrl(imageUrl);
+                img.alt = `Existing image ${index + 1}`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-image';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = () => this.removeExistingImage(index, this.editingProduct);
+                
+                previewItem.appendChild(img);
+                previewItem.appendChild(removeBtn);
+                previewContainer.appendChild(previewItem);
+            });
         }
 
+        // Show newly selected images
         this.selectedImages.forEach((file, index) => {
             const previewItem = document.createElement('div');
             previewItem.className = 'image-preview-item';
@@ -575,6 +656,11 @@ export class ProductManager {
             previewItem.appendChild(removeBtn);
             previewContainer.appendChild(previewItem);
         });
+
+        // Show placeholder if no images at all
+        if ((!this.editingProduct || !this.editingProduct.imageUrls || this.editingProduct.imageUrls.length === 0) && this.selectedImages.length === 0) {
+            previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+        }
     }
 
     removeImage(index) {
@@ -585,6 +671,49 @@ export class ProductManager {
     clearImagePreview() {
         const previewContainer = document.getElementById('imagePreview');
         previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+    }
+
+    showExistingImages(product) {
+        const previewContainer = document.getElementById('imagePreview');
+        previewContainer.innerHTML = '';
+
+        if (!product.imageUrls || product.imageUrls.length === 0) {
+            previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+            return;
+        }
+
+        product.imageUrls.forEach((imageUrl, index) => {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+            
+            const img = document.createElement('img');
+            img.src = getImageUrl(imageUrl);
+            img.alt = `Existing image ${index + 1}`;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-image';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => this.removeExistingImage(index, product);
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeBtn);
+            previewContainer.appendChild(previewItem);
+        });
+    }
+
+    removeExistingImage(index, product) {
+        // Remove the image from the product's imageUrls array
+        product.imageUrls.splice(index, 1);
+        
+        // Update the imageUrl if it was the first image
+        if (index === 0 && product.imageUrls.length > 0) {
+            product.imageUrl = product.imageUrls[0];
+        } else if (product.imageUrls.length === 0) {
+            product.imageUrl = null;
+        }
+        
+        // Re-render the preview
+        this.showExistingImages(product);
     }
 
     // Public methods for global access
