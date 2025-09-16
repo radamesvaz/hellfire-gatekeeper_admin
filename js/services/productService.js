@@ -64,12 +64,15 @@ export class ProductService {
                 // Mock API call
                 await simulateApiDelay(800);
                 
-                // Process images for mock data
-                const processedData = this.processProductImages(productData);
+                // For mock data, we'll create the product without images first
+                const processedData = { ...productData };
+                // Remove images from the data as they'll be handled separately
+                delete processedData.images;
                 
                 const newProduct = {
                     id: generateId(),
                     ...processedData,
+                    image_urls: [], // Start with empty image array
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
@@ -77,9 +80,34 @@ export class ProductService {
                 this.mockProducts.push(newProduct);
                 return newProduct;
             } else {
-                // Real API call using FormData for file uploads
-                const formData = this.createFormData(productData);
-                const response = await this.httpService.postFormData(`${this.baseURL}/auth/products`, formData);
+                // Real API call - send only product data (no images)
+                const productDataOnly = { ...productData };
+                // Remove images from the data as they'll be handled separately
+                delete productDataOnly.images;
+                
+                // Convert data types to match backend expectations
+                if (productDataOnly.price !== undefined) {
+                    productDataOnly.price = parseFloat(productDataOnly.price);
+                }
+                if (productDataOnly.stock !== undefined) {
+                    productDataOnly.stock = parseInt(productDataOnly.stock);
+                }
+                if (productDataOnly.available !== undefined) {
+                    productDataOnly.available = typeof productDataOnly.available === 'string' ? 
+                        productDataOnly.available === 'true' : productDataOnly.available;
+                }
+                
+                console.log('Sending product data:', productDataOnly);
+                console.log('Data types:', {
+                    name: typeof productDataOnly.name,
+                    description: typeof productDataOnly.description,
+                    price: typeof productDataOnly.price,
+                    stock: typeof productDataOnly.stock,
+                    available: typeof productDataOnly.available,
+                    status: typeof productDataOnly.status
+                });
+                
+                const response = await this.httpService.post(`${this.baseURL}/auth/products`, productDataOnly);
 
                 if (!response.ok) {
                     // Get the error message from response
@@ -96,6 +124,118 @@ export class ProductService {
         }
     }
 
+    async uploadProductImages(productId, images) {
+        try {
+            if (this.useMockData) {
+                // Mock API call for image upload
+                await simulateApiDelay(1000);
+                
+                // Find the product in mock data
+                const productIndex = this.mockProducts.findIndex(p => p.id === productId);
+                if (productIndex === -1) {
+                    throw new Error('Product not found');
+                }
+                
+                // Simulate image URLs that match the backend format
+                const mockImageUrls = images.map((file, index) => {
+                    return `/uploads/products/mock_${Date.now()}_${index}_${file.name}`;
+                });
+                
+                // Add new images to existing ones
+                const existingImages = this.mockProducts[productIndex].image_urls || [];
+                const allImages = [...existingImages, ...mockImageUrls];
+                
+                // Update the product with new images
+                this.mockProducts[productIndex].image_urls = allImages;
+                this.mockProducts[productIndex].imageUrl = allImages[0]; // Set first image as main
+                this.mockProducts[productIndex].updatedAt = new Date().toISOString();
+                
+                return {
+                    message: "Images added successfully",
+                    new_images: mockImageUrls,
+                    all_images: allImages
+                };
+            } else {
+                // Real API call using FormData for image uploads
+                const formData = new FormData();
+                
+                // Add images to form data (using "images" field name as expected by backend)
+                images.forEach((file) => {
+                    formData.append('images', file);
+                });
+                
+                const response = await this.httpService.postFormData(`${this.baseURL}/auth/products/${productId}/images`, formData);
+
+                if (!response.ok) {
+                    // Get the error message from response
+                    const errorText = await response.text();
+                    console.log('Backend error response:', errorText);
+                    throw new Error(errorText || 'Failed to upload images');
+                }
+
+                return await response.json();
+            }
+        } catch (error) {
+            console.error('Upload product images error:', error);
+            throw error;
+        }
+    }
+
+    async deleteProductImage(productId, imageUrl) {
+        try {
+            if (this.useMockData) {
+                // Mock API call for image deletion
+                await simulateApiDelay(500);
+                
+                // Find the product in mock data
+                const productIndex = this.mockProducts.findIndex(p => p.id === productId);
+                if (productIndex === -1) {
+                    throw new Error('Product not found');
+                }
+                
+                // Remove the image from the product's imageUrls array
+                const currentImages = this.mockProducts[productIndex].image_urls || [];
+                const updatedImages = currentImages.filter(url => url !== imageUrl);
+                
+                // Update the product with remaining images
+                this.mockProducts[productIndex].image_urls = updatedImages;
+                this.mockProducts[productIndex].imageUrl = updatedImages.length > 0 ? updatedImages[0] : null;
+                this.mockProducts[productIndex].updatedAt = new Date().toISOString();
+                
+                return {
+                    message: "Image deleted successfully",
+                    remaining_images: updatedImages
+                };
+            } else {
+                // Real API call using DELETE method
+                const encodedImageUrl = encodeURIComponent(imageUrl);
+                const deleteUrl = `${this.baseURL}/auth/products/${productId}/images?imageUrl=${encodedImageUrl}`;
+                
+                console.log('Deleting image:', {
+                    productId,
+                    imageUrl,
+                    encodedImageUrl,
+                    deleteUrl
+                });
+                
+                const response = await this.httpService.delete(deleteUrl);
+
+                if (!response.ok) {
+                    // Get the error message from response
+                    const errorText = await response.text();
+                    console.log('Backend error response:', errorText);
+                    console.log('Response status:', response.status);
+                    throw new Error(errorText || 'Failed to delete image');
+                }
+
+                return await response.json();
+            }
+        } catch (error) {
+            console.error('Delete product image error:', error);
+            throw error;
+        }
+    }
+
     async updateProduct(id, productData) {
         try {
             if (this.useMockData) {
@@ -107,8 +247,10 @@ export class ProductService {
                     throw new Error('Product not found');
                 }
                 
-                // Process images for mock data
-                const processedData = this.processProductImages(productData);
+                // For updates, we'll handle images separately if they exist
+                const processedData = { ...productData };
+                // Remove images from the data as they'll be handled separately
+                delete processedData.images;
                 
                 const updatedProduct = {
                     ...this.mockProducts[productIndex],
@@ -119,9 +261,26 @@ export class ProductService {
                 this.mockProducts[productIndex] = updatedProduct;
                 return updatedProduct;
             } else {
-                // Real API call using FormData for file uploads
-                const formData = this.createFormData(productData);
-                const response = await this.httpService.putFormData(`${this.baseURL}/auth/products/${id}`, formData);
+                // Real API call - send only product data (no images)
+                const productDataOnly = { ...productData };
+                // Remove images from the data as they'll be handled separately
+                delete productDataOnly.images;
+                
+                // Convert data types to match backend expectations
+                if (productDataOnly.price !== undefined) {
+                    productDataOnly.price = parseFloat(productDataOnly.price);
+                }
+                if (productDataOnly.stock !== undefined) {
+                    productDataOnly.stock = parseInt(productDataOnly.stock);
+                }
+                if (productDataOnly.available !== undefined) {
+                    productDataOnly.available = typeof productDataOnly.available === 'string' ? 
+                        productDataOnly.available === 'true' : productDataOnly.available;
+                }
+                
+                console.log('Sending update data:', productDataOnly);
+                
+                const response = await this.httpService.put(`${this.baseURL}/auth/products/${id}`, productDataOnly);
 
                 if (!response.ok) {
                     // Get the error message from response
@@ -202,9 +361,8 @@ export class ProductService {
     // Transform server data to match our expected format
     transformProductsData(serverProducts) {
         return serverProducts.map(product => {
-            // Clean image URLs - replace spaces with underscores
-            const cleanImageUrls = product.image_urls ? 
-                product.image_urls.map(url => url.replace(/\s+/g, '_')) : [];
+            // Use image_urls as is from the server
+            const imageUrls = product.image_urls || [];
             
             return {
                 id: product.id_product,
@@ -212,8 +370,8 @@ export class ProductService {
                 description: product.description,
                 price: product.price,
                 stock: product.stock,
-                imageUrl: cleanImageUrls.length > 0 ? cleanImageUrls[0] : null,
-                imageUrls: cleanImageUrls,
+                imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
+                imageUrls: imageUrls,
                 status: product.status,
                 available: product.available,
                 createdAt: product.created_on
@@ -242,56 +400,14 @@ export class ProductService {
         }
     }
 
-    // Process product images for mock data
-    processProductImages(productData) {
-        const processedData = { ...productData };
-        
-        if (productData.images && productData.images.length > 0) {
-            // For mock data, we'll simulate image URLs that match the backend format
-            const mockImageUrls = productData.images.map((file, index) => {
-                // Create mock URLs that match the backend pattern
-                return `/uploads/products/mock_${Date.now()}_${index}_${file.name}`;
-            });
-            
-            // Set the image_urls array to match backend format
-            processedData.image_urls = mockImageUrls;
-            
-            // Set the first image as the main image URL for backward compatibility
-            if (mockImageUrls.length > 0) {
-                processedData.imageUrl = mockImageUrls[0];
-            }
-            
-            // Remove the files array as we don't need it in the processed data
-            delete processedData.images;
-        }
-        
-        return processedData;
-    }
-
-    // Create FormData for file uploads
-    createFormData(productData) {
+    // Create FormData for image uploads only
+    createImageFormData(images) {
         const formData = new FormData();
         
-        // Add basic product fields (matching backend expectations)
-        formData.append('name', productData.name);
-        formData.append('description', productData.description);
-        formData.append('price', productData.price);
-        formData.append('stock', productData.stock);
-        formData.append('status', productData.status);
-        
-        // Convert available to boolean if it's a string
-        const availableValue = productData.available !== undefined ? 
-            (typeof productData.available === 'string' ? productData.available === 'true' : productData.available) : 
-            true;
-        formData.append('available', availableValue);
-        
-        // Add images if they exist (using "images" field name as expected by backend)
-        if (productData.images && productData.images.length > 0) {
-            productData.images.forEach((file, index) => {
-                formData.append('images', file);
-            });
-        }
-        
+        // Add images (using "images" field name as expected by backend)
+        images.forEach((file) => {
+            formData.append('images', file);
+        });
         
         return formData;
     }

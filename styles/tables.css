@@ -324,6 +324,8 @@
 
 .product-image-detail {
     flex: 0 0 auto;
+    position: relative;
+    display: inline-block;
 }
 
 .product-detail-image {
@@ -332,6 +334,32 @@
     object-fit: cover;
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
+}
+
+.delete-image-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.delete-image-btn:hover {
+    background-color: rgba(220, 38, 38, 1);
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 .no-images {

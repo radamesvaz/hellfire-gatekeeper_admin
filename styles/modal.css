@@ -333,3 +333,37 @@
         font-size: 1rem;
     }
 }
+
+/* Delete Image Confirmation Modal */
+.delete-image-preview {
+    text-align: center;
+}
+
+.delete-image-preview p {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.delete-preview-image {
+    max-width: 300px;
+    max-height: 300px;
+    width: auto;
+    height: auto;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    margin: 1rem 0;
+}
+
+.delete-warning {
+    color: var(--danger-color);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .delete-preview-image {
+        max-width: 250px;
+        max-height: 250px;
+    }
+}

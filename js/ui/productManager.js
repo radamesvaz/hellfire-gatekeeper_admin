@@ -126,6 +126,23 @@ export class ProductManager {
                 console.error('No product details available for status change');
             }
         });
+
+        // Delete Image Confirmation Modal event listeners
+        const closeDeleteImageConfirmationModal = document.getElementById('closeDeleteImageConfirmationModal');
+        const cancelDeleteImage = document.getElementById('cancelDeleteImage');
+        const confirmDeleteImage = document.getElementById('confirmDeleteImage');
+        
+        closeDeleteImageConfirmationModal.addEventListener('click', () => {
+            this.hideDeleteImageConfirmationModal();
+        });
+        
+        cancelDeleteImage.addEventListener('click', () => {
+            this.hideDeleteImageConfirmationModal();
+        });
+
+        confirmDeleteImage.addEventListener('click', () => {
+            this.confirmDeleteImage();
+        });
     }
 
     async loadProducts() {
@@ -177,15 +194,21 @@ export class ProductManager {
 
         // Product image
         const imageCell = document.createElement('td');
+        
         if (product.imageUrl) {
             const img = document.createElement('img');
             // Use the helper function to get the correct image URL
-            img.src = getImageUrl(product.imageUrl);
+            const fullImageUrl = getImageUrl(product.imageUrl);
+            img.src = fullImageUrl;
             img.alt = product.name;
             img.className = 'product-image';
-            img.onerror = () => {
+            img.onerror = (e) => {
+                console.error(`Failed to load image for product ${product.name}:`, fullImageUrl);
                 img.style.display = 'none';
                 imageCell.innerHTML = '<div class="product-image-placeholder">No Image</div>';
+            };
+            img.onload = () => {
+                console.log(`Successfully loaded image for product ${product.name}`);
             };
             imageCell.appendChild(img);
         } else {
@@ -257,12 +280,7 @@ export class ProductManager {
     async handleProductSubmit() {
         const formData = this.uiManager.getFormData('productForm');
         
-        // Add images to form data
-        if (this.selectedImages.length > 0) {
-            formData.images = this.selectedImages;
-        }
-        
-        // Validate form data
+        // Validate form data (without images)
         const errors = this.productService.validateProductData(formData);
         if (errors.length > 0) {
             this.uiManager.showError(errors.join(', '));
@@ -273,12 +291,40 @@ export class ProductManager {
             this.uiManager.showLoading();
             
             if (this.editingProduct) {
-                // Update existing product
-                await this.productService.updateProduct(this.editingProduct.id, formData);
-                this.uiManager.showSuccess('Product updated successfully');
+                // Check if product data has changed
+                const hasDataChanges = this.hasProductDataChanged(formData);
+                
+                if (hasDataChanges) {
+                    // Update existing product data
+                    await this.productService.updateProduct(this.editingProduct.id, formData);
+                }
+                
+                // If there are new images, upload them separately
+                if (this.selectedImages.length > 0) {
+                    await this.productService.uploadProductImages(this.editingProduct.id, this.selectedImages);
+                }
+                
+                // Show appropriate success message
+                if (hasDataChanges && this.selectedImages.length > 0) {
+                    this.uiManager.showSuccess('Product and images updated successfully');
+                } else if (hasDataChanges) {
+                    this.uiManager.showSuccess('Product updated successfully');
+                } else if (this.selectedImages.length > 0) {
+                    this.uiManager.showSuccess('Images added successfully');
+                } else {
+                    this.uiManager.showSuccess('No changes detected');
+                }
             } else {
-                // Create new product
-                await this.productService.createProduct(formData);
+                // Create new product first
+                const createdProduct = await this.productService.createProduct(formData);
+                
+                // If there are images, upload them separately
+                if (this.selectedImages.length > 0) {
+                    // Extract product ID from the response
+                    const productId = createdProduct.product_id || createdProduct.id;
+                    await this.productService.uploadProductImages(productId, this.selectedImages);
+                }
+                
                 this.uiManager.showSuccess('Product created successfully');
             }
 
@@ -290,6 +336,23 @@ export class ProductManager {
             this.uiManager.showError(error.message || 'Failed to save product');
             console.error('Product submit error:', error);
         }
+    }
+
+    // Check if product data has changed (excluding images)
+    hasProductDataChanged(formData) {
+        if (!this.editingProduct) return true; // New product always has changes
+        
+        const currentProduct = this.editingProduct;
+        
+        // Compare each field
+        return (
+            formData.name !== currentProduct.name ||
+            formData.description !== currentProduct.description ||
+            parseFloat(formData.price) !== parseFloat(currentProduct.price) ||
+            parseInt(formData.stock) !== parseInt(currentProduct.stock) ||
+            formData.status !== currentProduct.status ||
+            (formData.available === 'true') !== currentProduct.available
+        );
     }
 
     showStatusModal(productId) {
@@ -561,10 +624,26 @@ export class ProductManager {
         
         // Populate images
         const imagesContainer = document.getElementById('productDetailsImages');
-        if (product.imageUrl) {
+        if (product.imageUrls && product.imageUrls.length > 0) {
+            // Show all images from the imageUrls array with delete buttons
+            const imagesHTML = product.imageUrls.map((imageUrl, index) => `
+                <div class="product-image-detail">
+                    <img src="${getImageUrl(imageUrl)}" alt="${product.name} - Image ${index + 1}" class="product-detail-image">
+                    <button class="delete-image-btn" onclick="productManager.deleteImageFromProduct(${product.id}, '${imageUrl}')" title="Delete this image">
+                        ×
+                    </button>
+                </div>
+            `).join('');
+            
+            imagesContainer.innerHTML = imagesHTML;
+        } else if (product.imageUrl) {
+            // Fallback to single image if imageUrls array is not available
             imagesContainer.innerHTML = `
                 <div class="product-image-detail">
                     <img src="${getImageUrl(product.imageUrl)}" alt="${product.name}" class="product-detail-image">
+                    <button class="delete-image-btn" onclick="productManager.deleteImageFromProduct(${product.id}, '${product.imageUrl}')" title="Delete this image">
+                        ×
+                    </button>
                 </div>
             `;
         } else {
@@ -572,6 +651,60 @@ export class ProductManager {
         }
         
         this.uiManager.showModal('productDetailsModal');
+    }
+
+    async deleteImageFromProduct(productId, imageUrl) {
+        // Store the deletion parameters for later use
+        this.pendingImageDeletion = { productId, imageUrl };
+        
+        // Show the image preview in the confirmation modal
+        const previewImage = document.getElementById('deleteImagePreview');
+        previewImage.src = getImageUrl(imageUrl);
+        
+        // Show the confirmation modal
+        this.uiManager.showModal('deleteImageConfirmationModal');
+    }
+
+    async confirmDeleteImage() {
+        if (!this.pendingImageDeletion) {
+            this.uiManager.showError('No image selected for deletion');
+            return;
+        }
+
+        const { productId, imageUrl } = this.pendingImageDeletion;
+
+        try {
+            this.uiManager.showLoading();
+            this.hideDeleteImageConfirmationModal();
+            
+            // Call the service to delete the image
+            await this.productService.deleteProductImage(productId, imageUrl);
+            
+            // Update the current product details
+            if (this.currentProductDetails && this.currentProductDetails.id === productId) {
+                // Remove the image from the current product details
+                this.currentProductDetails.imageUrls = this.currentProductDetails.imageUrls.filter(url => url !== imageUrl);
+                this.currentProductDetails.imageUrl = this.currentProductDetails.imageUrls.length > 0 ? this.currentProductDetails.imageUrls[0] : null;
+                
+                // Refresh the modal display
+                this.showProductDetails(this.currentProductDetails);
+            }
+            
+            // Reload products to get updated data
+            await this.loadProducts();
+            
+            this.uiManager.showSuccess('Image deleted successfully');
+            this.uiManager.hideLoading();
+        } catch (error) {
+            this.uiManager.hideLoading();
+            this.uiManager.showError(error.message || 'Failed to delete image');
+            console.error('Delete image error:', error);
+        }
+    }
+
+    hideDeleteImageConfirmationModal() {
+        this.uiManager.hideModal('deleteImageConfirmationModal');
+        this.pendingImageDeletion = null;
     }
 
     hideProductDetailsModal() {
