@@ -74,7 +74,7 @@ export class OrderManager {
         if (this.orders.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                         No orders found. Orders will appear here when customers place them.
                     </td>
                 </tr>
@@ -138,10 +138,31 @@ export class OrderManager {
         const statusCell = document.createElement('td');
         statusCell.innerHTML = `<span class="status-badge status-${order.status}">${order.status}</span>`;
 
+        // Paid Status with editable checkbox
+        const paidCell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = order.paid || false;
+        checkbox.className = 'paid-checkbox';
+        
+        // Prevent row click when interacting with checkbox
+        checkbox.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent row click
+        });
+        
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation(); // Prevent row click
+            this.handlePaidStatusChange(order.id, e.target.checked);
+        });
+        
+        paidCell.appendChild(checkbox);
+        paidCell.style.textAlign = 'center';
+
         row.appendChild(deliveryDateCell);
         row.appendChild(customerCell);
         row.appendChild(productCell);
         row.appendChild(statusCell);
+        row.appendChild(paidCell);
 
         return row;
     }
@@ -199,6 +220,35 @@ export class OrderManager {
         }
     }
 
+    async handlePaidStatusChange(orderId, paid) {
+        try {
+            await this.orderService.updateOrderPaidStatus(orderId, paid);
+            
+            // Update the order in our local array
+            const orderIndex = this.orders.findIndex(o => o.id === orderId);
+            if (orderIndex !== -1) {
+                this.orders[orderIndex].paid = paid;
+            }
+            
+            // Update the modal if it's currently showing this order
+            if (this.currentOrderDetails && this.currentOrderDetails.id === orderId) {
+                this.currentOrderDetails.paid = paid;
+                this.updateOrderDetailsPaidStatus(paid);
+            }
+            
+            this.uiManager.showSuccess(`Order ${paid ? 'marked as paid' : 'marked as unpaid'}`);
+        } catch (error) {
+            this.uiManager.showError(error.message || 'Failed to update payment status');
+            console.error('Paid status update error:', error);
+            
+            // Revert the checkbox state on error
+            const checkbox = document.querySelector(`input[data-order-id="${orderId}"]`);
+            if (checkbox) {
+                checkbox.checked = !paid;
+            }
+        }
+    }
+
     showOrderDetails(order) {
         this.currentOrderDetails = order;
         
@@ -217,6 +267,10 @@ export class OrderManager {
         document.getElementById('orderDetailsStatus').className = `status-badge status-${order.status}`;
         document.getElementById('orderDetailsCustomer').textContent = order.customer;
         document.getElementById('orderDetailsCustomerId').textContent = order.userId;
+        document.getElementById('orderDetailsPhone').textContent = order.phone || '-';
+        
+        // Update paid status
+        this.updateOrderDetailsPaidStatus(order.paid || false);
         
         // Populate order notes
         const notesContainer = document.getElementById('orderDetailsNotes');
@@ -273,6 +327,17 @@ export class OrderManager {
         this.uiManager.hideModal('orderStatusModal');
         this.editingOrder = null;
         this.uiManager.resetForm('orderStatusForm');
+    }
+
+    updateOrderDetailsPaidStatus(paid) {
+        const paidElement = document.getElementById('orderDetailsPaid');
+        if (paid) {
+            paidElement.innerHTML = '<span class="paid-badge paid">✓ Pagado</span>';
+            paidElement.className = 'paid-status paid';
+        } else {
+            paidElement.innerHTML = '<span class="paid-badge unpaid">✗ No Pagado</span>';
+            paidElement.className = 'paid-status unpaid';
+        }
     }
 
     // Public methods for global access
