@@ -101,6 +101,8 @@ export const mockData = {
                 }
             ],
             status: 'pending',
+            paid: false,
+            phone: '555-0123',
             createdAt: '2024-01-15T14:30:00.000Z',
             updatedAt: '2024-01-15T14:30:00.000Z'
         },
@@ -125,6 +127,8 @@ export const mockData = {
                 }
             ],
             status: 'confirmed',
+            paid: true,
+            phone: '555-0456',
             createdAt: '2024-01-15T12:15:00.000Z',
             updatedAt: '2024-01-15T12:15:00.000Z'
         },
@@ -143,6 +147,8 @@ export const mockData = {
                 }
             ],
             status: 'preparing',
+            paid: false,
+            phone: '555-0789',
             createdAt: '2024-01-15T10:45:00.000Z',
             updatedAt: '2024-01-15T10:45:00.000Z'
         },
@@ -167,6 +173,8 @@ export const mockData = {
                 }
             ],
             status: 'ready',
+            paid: true,
+            phone: '555-0321',
             createdAt: '2024-01-15T09:20:00.000Z',
             updatedAt: '2024-01-15T09:20:00.000Z'
         },
@@ -191,6 +199,8 @@ export const mockData = {
                 }
             ],
             status: 'completed',
+            paid: true,
+            phone: '555-0654',
             createdAt: '2024-01-14T16:30:00.000Z',
             updatedAt: '2024-01-14T16:30:00.000Z'
         },
@@ -209,6 +219,8 @@ export const mockData = {
                 }
             ],
             status: 'cancelled',
+            paid: false,
+            phone: '555-0987',
             createdAt: '2024-01-14T14:00:00.000Z',
             updatedAt: '2024-01-14T14:00:00.000Z'
         }

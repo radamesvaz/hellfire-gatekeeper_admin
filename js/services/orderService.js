@@ -22,7 +22,10 @@ export class OrderService {
             if (this.useMockData) {
                 // Mock API call
                 await simulateApiDelay(600);
-                return this.mockOrders;
+                // Transform mock data to match our expected format
+                const transformedOrders = this.transformMockOrdersData(this.mockOrders);
+                console.log('Transformed mock orders data:', transformedOrders);
+                return transformedOrders;
             } else {
                 // Real API call using HttpService
                 const response = await this.httpService.get(`${this.baseURL}${this.authRequired}/orders`);
@@ -82,8 +85,8 @@ export class OrderService {
                 this.mockOrders[orderIndex] = updatedOrder;
                 return updatedOrder;
             } else {
-                // Real API call using HttpService with PATCH method
-                const response = await this.httpService.patch(`${this.baseURL}${this.authRequired}/orders/${id}/status`, { status });
+                // Real API call using unified endpoint
+                const response = await this.httpService.patch(`${this.baseURL}${this.authRequired}/orders/${id}`, { status });
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -94,6 +97,42 @@ export class OrderService {
             }
         } catch (error) {
             console.error('Update order status error:', error);
+            throw error;
+        }
+    }
+
+    async updateOrderPaidStatus(id, paid) {
+        try {
+            if (this.useMockData) {
+                // Mock API call
+                await simulateApiDelay(500);
+                
+                const orderIndex = this.mockOrders.findIndex(o => o.id === id);
+                if (orderIndex === -1) {
+                    throw new Error('Order not found');
+                }
+                
+                const updatedOrder = {
+                    ...this.mockOrders[orderIndex],
+                    paid: paid,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                this.mockOrders[orderIndex] = updatedOrder;
+                return updatedOrder;
+            } else {
+                // Real API call using unified endpoint
+                const response = await this.httpService.patch(`${this.baseURL}${this.authRequired}/orders/${id}`, { paid });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update order paid status');
+                }
+
+                return await response.json();
+            }
+        } catch (error) {
+            console.error('Update order paid status error:', error);
             throw error;
         }
     }
@@ -172,7 +211,26 @@ export class OrderService {
             date: order.created_on,
             deliveryDate: order.delivery_date,
             note: order.note || '',
-            userId: order.id_user
+            userId: order.id_user,
+            paid: order.paid || false,
+            phone: order.phone || ''
+        }));
+    }
+
+    // Transform mock data to match our expected format
+    transformMockOrdersData(mockOrders) {
+        return mockOrders.map(order => ({
+            id: parseInt(order.id),
+            customer: order.customer.name,
+            items: order.items,
+            total: this.calculateOrderTotal(order.items),
+            status: order.status,
+            date: order.createdAt,
+            deliveryDate: order.createdAt, // Using createdAt as delivery date for mock
+            note: '',
+            userId: order.id,
+            paid: order.paid || false,
+            phone: order.phone || ''
         }));
     }
 
