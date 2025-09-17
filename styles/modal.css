@@ -156,7 +156,7 @@
 
 .status-action-btn:hover {
     border-color: var(--primary-color);
-    background-color: var(--primary-color-light);
+    background-color: rgb(20 222 74 / 0.1);
 }
 
 .status-action-btn:disabled {

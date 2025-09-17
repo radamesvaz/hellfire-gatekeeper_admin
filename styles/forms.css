@@ -34,7 +34,7 @@
 .form-group select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgb(139 92 246 / 0.1);
+    box-shadow: 0 0 0 3px rgb(20 222 74 / 0.1);
 }
 
 .form-group input::placeholder,
@@ -81,7 +81,7 @@
 }
 
 .btn-link:hover {
-    color: var(--primary-dark);
+    color: var(--primary-hover);
 }
 
 /* Modal Form */
@@ -105,7 +105,7 @@
 
 .file-input:hover {
     border-color: var(--primary-color);
-    background-color: rgb(139 92 246 / 0.05);
+    background-color: rgb(20 222 74 / 0.05);
 }
 
 .file-input-info {

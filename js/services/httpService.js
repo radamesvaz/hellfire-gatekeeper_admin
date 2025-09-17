@@ -19,7 +19,6 @@ export class HttpService {
             
             // Check for 401 Unauthorized
             if (response.status === 401) {
-                console.log('Token expired or invalid - redirecting to login');
                 this.handleUnauthorized();
                 throw new Error('Unauthorized - token expired');
             }
