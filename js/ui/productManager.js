@@ -153,7 +153,7 @@ export class ProductManager {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError('Failed to load products');
+            this.uiManager.showError('Error al cargar los productos');
             console.error('Load products error:', error);
         }
     }
@@ -169,7 +169,7 @@ export class ProductManager {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        No products found. Add your first product to get started.
+                        No se encontraron productos. Agrega tu primer producto para comenzar.
                     </td>
                 </tr>
             `;
@@ -208,7 +208,6 @@ export class ProductManager {
                 imageCell.innerHTML = '<div class="product-image-placeholder">No Image</div>';
             };
             img.onload = () => {
-                console.log(`Successfully loaded image for product ${product.name}`);
             };
             imageCell.appendChild(img);
         } else {
@@ -244,7 +243,7 @@ export class ProductManager {
         this.editingProduct = null;
         this.selectedImages = [];
         this.clearImagePreview();
-        document.getElementById('productModalTitle').textContent = 'Add New Product';
+        document.getElementById('productModalTitle').textContent = 'Agregar Nuevo Producto';
         this.uiManager.resetForm('productForm');
         this.uiManager.showModal('productModal');
     }
@@ -255,11 +254,11 @@ export class ProductManager {
         this.editingProduct = this.products.find(p => p.id === numericProductId);
         
         if (!this.editingProduct) {
-            this.uiManager.showError('Product not found');
+            this.uiManager.showError('Producto no encontrado');
             return;
         }
 
-        document.getElementById('productModalTitle').textContent = 'Edit Product';
+        document.getElementById('productModalTitle').textContent = 'Editar Producto';
         this.populateProductForm(this.editingProduct);
         this.uiManager.showModal('productModal');
     }
@@ -306,13 +305,13 @@ export class ProductManager {
                 
                 // Show appropriate success message
                 if (hasDataChanges && this.selectedImages.length > 0) {
-                    this.uiManager.showSuccess('Product and images updated successfully');
+                    this.uiManager.showSuccess('Producto e imágenes actualizados exitosamente');
                 } else if (hasDataChanges) {
-                    this.uiManager.showSuccess('Product updated successfully');
+                    this.uiManager.showSuccess('Producto actualizado exitosamente');
                 } else if (this.selectedImages.length > 0) {
-                    this.uiManager.showSuccess('Images added successfully');
+                    this.uiManager.showSuccess('Imágenes agregadas exitosamente');
                 } else {
-                    this.uiManager.showSuccess('No changes detected');
+                    this.uiManager.showSuccess('No se detectaron cambios');
                 }
             } else {
                 // Create new product first
@@ -325,7 +324,7 @@ export class ProductManager {
                     await this.productService.uploadProductImages(productId, this.selectedImages);
                 }
                 
-                this.uiManager.showSuccess('Product created successfully');
+                this.uiManager.showSuccess('Producto creado exitosamente');
             }
 
             this.hideProductModal();
@@ -333,7 +332,7 @@ export class ProductManager {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError(error.message || 'Failed to save product');
+            this.uiManager.showError(error.message || 'Error al guardar el producto');
             console.error('Product submit error:', error);
         }
     }
@@ -360,7 +359,7 @@ export class ProductManager {
         const numericProductId = parseInt(productId);
         const product = this.products.find(p => p.id === numericProductId);
         if (!product) {
-            this.uiManager.showError('Product not found');
+            this.uiManager.showError('Producto no encontrado');
             return;
         }
 
@@ -405,7 +404,7 @@ export class ProductManager {
 
     async changeProductStatus(newStatus) {
         if (!this.currentStatusProduct) {
-            this.uiManager.showError('No product selected');
+            this.uiManager.showError('Ningún producto seleccionado');
             return;
         }
 
@@ -437,13 +436,13 @@ export class ProductManager {
             let successMessage = '';
             switch (newStatus) {
                 case 'active':
-                    successMessage = 'Product activated successfully';
+                    successMessage = 'Producto activado exitosamente';
                     break;
                 case 'inactive':
-                    successMessage = 'Product deactivated successfully';
+                    successMessage = 'Producto desactivado exitosamente';
                     break;
                 default:
-                    successMessage = 'Product status updated successfully';
+                    successMessage = 'Estado del producto actualizado exitosamente';
             }
 
             this.uiManager.showSuccess(successMessage);
@@ -452,14 +451,14 @@ export class ProductManager {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError(error.message || 'Failed to update product status');
+            this.uiManager.showError(error.message || 'Error al actualizar el estado del producto');
             console.error('Change product status error:', error);
         }
     }
 
     showDeleteConfirmationModal() {
         if (!this.currentStatusProduct) {
-            this.uiManager.showError('No product selected');
+            this.uiManager.showError('Ningún producto seleccionado');
             return;
         }
 
@@ -481,7 +480,7 @@ export class ProductManager {
 
     async confirmDeleteProduct() {
         if (!this.pendingDeleteProduct) {
-            this.uiManager.showError('No product selected for deletion');
+            this.uiManager.showError('Ningún producto seleccionado para eliminación');
             return;
         }
 
@@ -506,7 +505,7 @@ export class ProductManager {
 
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError(error.message || 'Failed to delete product');
+            this.uiManager.showError(error.message || 'Error al eliminar el producto');
             console.error('Delete product error:', error);
             this.hideDeleteConfirmationModal();
         }
@@ -523,12 +522,12 @@ export class ProductManager {
         notification.className = 'undo-notification';
         notification.innerHTML = `
             <div class="undo-notification-content">
-                <h4 class="undo-notification-title">Product Deleted</h4>
-                <p class="undo-notification-message">"${product.name}" has been marked as deleted.</p>
+                <h4 class="undo-notification-title">Producto Eliminado</h4>
+                <p class="undo-notification-message">"${product.name}" ha sido marcado como eliminado.</p>
             </div>
             <div class="undo-notification-actions">
                 <span class="undo-notification-countdown" id="undoCountdown">10</span>
-                <button class="undo-btn" id="undoDeleteBtn">Undo</button>
+                <button class="undo-btn" id="undoDeleteBtn">Deshacer</button>
             </div>
         `;
 
@@ -575,11 +574,11 @@ export class ProductManager {
 
             await this.loadProducts(); // Reload products
             this.uiManager.hideLoading();
-            this.uiManager.showSuccess(`Product "${product.name}" has been restored`);
+            this.uiManager.showSuccess(`El producto "${product.name}" ha sido restaurado`);
 
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError('Failed to restore product');
+            this.uiManager.showError('Error al restaurar el producto');
             console.error('Undo delete error:', error);
         }
     }
@@ -616,7 +615,7 @@ export class ProductManager {
         document.getElementById('productDetailsStock').textContent = product.stock;
         document.getElementById('productDetailsStatus').textContent = product.status;
         document.getElementById('productDetailsStatus').className = `status-badge status-${product.status}`;
-        document.getElementById('productDetailsAvailable').textContent = product.available ? 'Yes' : 'No';
+        document.getElementById('productDetailsAvailable').textContent = product.available ? 'Sí' : 'No';
         
         // Populate description
         const descriptionContainer = document.getElementById('productDetailsDescription');
@@ -647,7 +646,7 @@ export class ProductManager {
                 </div>
             `;
         } else {
-            imagesContainer.innerHTML = '<div class="no-images">No images available</div>';
+            imagesContainer.innerHTML = '<div class="no-images">No hay imágenes disponibles</div>';
         }
         
         this.uiManager.showModal('productDetailsModal');
@@ -667,7 +666,7 @@ export class ProductManager {
 
     async confirmDeleteImage() {
         if (!this.pendingImageDeletion) {
-            this.uiManager.showError('No image selected for deletion');
+            this.uiManager.showError('Ninguna imagen seleccionada para eliminación');
             return;
         }
 
@@ -693,11 +692,11 @@ export class ProductManager {
             // Reload products to get updated data
             await this.loadProducts();
             
-            this.uiManager.showSuccess('Image deleted successfully');
+            this.uiManager.showSuccess('Imagen eliminada exitosamente');
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError(error.message || 'Failed to delete image');
+            this.uiManager.showError(error.message || 'Error al eliminar la imagen');
             console.error('Delete image error:', error);
         }
     }
@@ -728,7 +727,7 @@ export class ProductManager {
         const invalidFiles = files.filter(file => !validTypes.includes(file.type));
         
         if (invalidFiles.length > 0) {
-            this.uiManager.showError('Please select only image files (JPG, PNG, GIF)');
+            this.uiManager.showError('Por favor selecciona solo archivos de imagen (JPG, PNG, GIF)');
             return;
         }
 
@@ -737,7 +736,7 @@ export class ProductManager {
         const oversizedFiles = files.filter(file => file.size > maxSize);
         
         if (oversizedFiles.length > 0) {
-            this.uiManager.showError('Image files must be smaller than 5MB');
+            this.uiManager.showError('Los archivos de imagen deben ser menores a 5MB');
             return;
         }
 
@@ -792,7 +791,7 @@ export class ProductManager {
 
         // Show placeholder if no images at all
         if ((!this.editingProduct || !this.editingProduct.imageUrls || this.editingProduct.imageUrls.length === 0) && this.selectedImages.length === 0) {
-            previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+            previewContainer.innerHTML = '<div class="image-preview-placeholder">No hay imágenes seleccionadas</div>';
         }
     }
 
@@ -803,7 +802,7 @@ export class ProductManager {
 
     clearImagePreview() {
         const previewContainer = document.getElementById('imagePreview');
-        previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+        previewContainer.innerHTML = '<div class="image-preview-placeholder">No hay imágenes seleccionadas</div>';
     }
 
     showExistingImages(product) {
@@ -811,7 +810,7 @@ export class ProductManager {
         previewContainer.innerHTML = '';
 
         if (!product.imageUrls || product.imageUrls.length === 0) {
-            previewContainer.innerHTML = '<div class="image-preview-placeholder">No images selected</div>';
+            previewContainer.innerHTML = '<div class="image-preview-placeholder">No hay imágenes seleccionadas</div>';
             return;
         }
 

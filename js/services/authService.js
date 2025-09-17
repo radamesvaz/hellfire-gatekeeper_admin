@@ -38,7 +38,7 @@ export class AuthService {
 
                     return data;
                 } else {
-                    throw new Error('Invalid email or password');
+                    throw new Error('Correo electrónico o contraseña inválidos');
                 }
             } else {
                 // Real API call
@@ -52,7 +52,7 @@ export class AuthService {
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Login failed');
+                    throw new Error(error.message || 'Error en el inicio de sesión');
                 }
 
                 const data = await response.json();
@@ -92,7 +92,7 @@ export class AuthService {
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Registration failed');
+                    throw new Error(error.message || 'Error en el registro');
                 }
 
                 const data = await response.json();
@@ -117,7 +117,7 @@ export class AuthService {
     async verifyToken() {
         const token = this.getToken();
         if (!token) {
-            throw new Error('No token found');
+            throw new Error('No se encontró token');
         }
 
         try {
@@ -128,12 +128,11 @@ export class AuthService {
                 if (token.startsWith('mock_jwt_token_')) {
                     return { valid: true, user: mockData.adminUser };
                 } else {
-                    throw new Error('Token verification failed');
+                    throw new Error('Error en la verificación del token');
                 }
             } else {
                 // Skip verification for now - assume token is valid if it exists
                 // TODO: Implement /verify endpoint in backend
-                console.log('Token verification skipped - assuming valid');
                 return { valid: true };
             }
         } catch (error) {

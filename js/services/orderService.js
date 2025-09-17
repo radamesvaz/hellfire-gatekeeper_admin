@@ -24,21 +24,18 @@ export class OrderService {
                 await simulateApiDelay(600);
                 // Transform mock data to match our expected format
                 const transformedOrders = this.transformMockOrdersData(this.mockOrders);
-                console.log('Transformed mock orders data:', transformedOrders);
                 return transformedOrders;
             } else {
                 // Real API call using HttpService
                 const response = await this.httpService.get(`${this.baseURL}${this.authRequired}/orders`);
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch orders');
+                    throw new Error('Error al obtener los pedidos');
                 }
 
                 const orders = await response.json();
-                console.log('Raw orders data from API:', orders);
                 // Transform server data to match our expected format
                 const transformedOrders = this.transformOrdersData(orders);
-                console.log('Transformed orders data:', transformedOrders);
                 return transformedOrders;
             }
         } catch (error) {
@@ -55,7 +52,7 @@ export class OrderService {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch order');
+                    throw new Error('Error al obtener el pedido');
             }
 
             return await response.json();
@@ -90,7 +87,7 @@ export class OrderService {
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Failed to update order status');
+                    throw new Error(error.message || 'Error al actualizar el estado del pedido');
                 }
 
                 return await response.json();
@@ -126,7 +123,7 @@ export class OrderService {
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Failed to update order paid status');
+                    throw new Error(error.message || 'Error al actualizar el estado de pago del pedido');
                 }
 
                 return await response.json();
@@ -146,7 +143,7 @@ export class OrderService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Failed to delete order');
+                    throw new Error(error.message || 'Error al eliminar el pedido');
             }
 
             return true;
@@ -165,7 +162,7 @@ export class OrderService {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch order statistics');
+                throw new Error('Error al obtener las estadísticas de pedidos');
             }
 
             return await response.json();
@@ -236,9 +233,7 @@ export class OrderService {
 
     // Transform order items from server format
     transformOrderItems(serverItems, orderTotal = 0) {
-        console.log('Transforming order items:', serverItems, 'with total:', orderTotal);
         return serverItems.map(item => {
-            console.log('Processing item:', item);
             // If no individual price is provided, calculate it from total
             let itemPrice = item.price || 0;
             if (itemPrice === 0 && orderTotal > 0 && serverItems.length > 0) {
@@ -254,7 +249,6 @@ export class OrderService {
                 price: itemPrice,
                 name: item.name || 'Unknown Product'
             };
-            console.log('Transformed item:', transformedItem);
             return transformedItem;
         });
     }

@@ -2,10 +2,11 @@ import { AuthService } from './services/authService.js';
 import { ProductService } from './services/productService.js';
 import { OrderService } from './services/orderService.js';
 import { HttpService } from './services/httpService.js';
+import { FavQsService } from './services/favqsService.js';
 import { UIManager } from './ui/uiManager.js';
 import { ProductManager } from './ui/productManager.js';
 import { OrderManager } from './ui/orderManager.js';
-import { config } from './config.js';
+import { config, initConfig } from './config.js';
 
 class AdminDashboard {
     constructor() {
@@ -13,6 +14,7 @@ class AdminDashboard {
         this.httpService = new HttpService();
         this.productService = new ProductService();
         this.orderService = new OrderService();
+        this.favqsService = null; // Will be initialized after config
         this.uiManager = new UIManager();
         this.productManager = new ProductManager(this.productService, this.uiManager);
         this.orderManager = new OrderManager(this.orderService, this.uiManager);
@@ -26,10 +28,19 @@ class AdminDashboard {
     }
 
     async init() {
+        // Initialize configuration first
+        await initConfig();
+        
+        // Initialize FavQs service after config is loaded
+        this.favqsService = new FavQsService();
+        
         // Setup HTTP interceptor for unauthorized responses
         this.httpService.setUnauthorizedCallback(() => {
             this.handleUnauthorized();
         });
+
+        // Setup event listeners
+        this.setupEventListeners();
 
         // Check if user is already authenticated
         const token = this.authService.getToken();
@@ -77,9 +88,14 @@ class AdminDashboard {
             this.showLoginForm();
         });
 
-        // Logout button
+        // Logout buttons (desktop and mobile)
         const logoutBtn = document.getElementById('logoutBtn');
         logoutBtn.addEventListener('click', () => {
+            this.handleLogout();
+        });
+        
+        const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+        logoutBtnMobile.addEventListener('click', () => {
             this.handleLogout();
         });
 
@@ -105,7 +121,7 @@ class AdminDashboard {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            errorElement.textContent = error.message || 'Login failed. Please try again.';
+            errorElement.textContent = error.message || 'Error en el inicio de sesión. Por favor intenta de nuevo.';
             errorElement.classList.remove('hidden');
         }
     }
@@ -122,7 +138,7 @@ class AdminDashboard {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            errorElement.textContent = error.message || 'Registration failed. Please try again.';
+            errorElement.textContent = error.message || 'Error en el registro. Por favor intenta de nuevo.';
             errorElement.classList.remove('hidden');
         }
     }
@@ -156,15 +172,17 @@ class AdminDashboard {
         document.getElementById('loginScreen').classList.remove('hidden');
         document.getElementById('dashboard').classList.add('hidden');
         this.showLoginForm();
+        this.loadQuote();
     }
 
     async showDashboard() {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
         
-        // Set user email
+        // Set user email (desktop and mobile)
         const userEmail = this.authService.getUserEmail();
         document.getElementById('userEmail').textContent = userEmail;
+        document.getElementById('userEmailMobile').textContent = userEmail;
 
         // Load initial data
         await this.loadDashboardData();
@@ -183,7 +201,7 @@ class AdminDashboard {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError('Failed to load dashboard data');
+            this.uiManager.showError('Error al cargar los datos del panel');
             console.error('Dashboard data loading error:', error);
         }
     }
@@ -204,10 +222,58 @@ class AdminDashboard {
 
     handleUnauthorized() {
         // Show error message
-        this.uiManager.showError('Your session has expired. Please log in again.');
+        this.uiManager.showError('Tu sesión ha expirado. Por favor inicia sesión de nuevo.');
         
         // Redirect to login
         this.showLogin();
+    }
+
+    async loadQuote() {
+        const quoteSection = document.getElementById('quoteSection');
+        const quoteText = document.getElementById('quoteText');
+        const quoteAuthor = document.getElementById('quoteAuthor');
+
+        try {
+            // Show loading state
+            quoteSection.classList.add('loading');
+            quoteText.textContent = 'Cargando cita inspiradora...';
+            quoteAuthor.textContent = '— Cargando...';
+
+            // Ensure FavQs service is initialized
+            if (!this.favqsService) {
+                await initConfig();
+                this.favqsService = new FavQsService();
+            }
+
+            // Fetch quote from FavQs API
+            const quote = await this.favqsService.getMotivationalQuote();
+
+            // Update UI with the quote
+            quoteText.textContent = quote.text;
+            quoteAuthor.textContent = `— ${quote.author}`;
+
+            // Remove loading state
+            quoteSection.classList.remove('loading');
+
+            // Add a subtle animation
+            quoteSection.style.opacity = '0';
+            quoteSection.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                quoteSection.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                quoteSection.style.opacity = '1';
+                quoteSection.style.transform = 'translateY(0)';
+            }, 100);
+
+        } catch (error) {
+            console.error('Error loading quote:', error);
+            
+            // Show error state
+            quoteSection.classList.remove('loading');
+            quoteSection.classList.add('error');
+            quoteText.textContent = 'No se pudo cargar la cita inspiradora.';
+            quoteAuthor.textContent = '— Intenta recargar la página';
+        }
     }
 }
 
