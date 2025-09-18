@@ -14,7 +14,7 @@ const environments = {
     },
     production: {
         api: {
-            baseURL: 'https://api.tudominio.com', // Cambiar por tu dominio de producción
+            baseURL: 'https://hellfire-gatekeeper-be.onrender.com',
         }
     }
 };
@@ -48,7 +48,6 @@ export const config = {
     api: {
         baseURL: envConfig.api.baseURL,
         authRequired: '/auth',
-        timeout: 10000, // Request timeout in milliseconds
     },
     
     // External APIs
