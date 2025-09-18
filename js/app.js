@@ -127,13 +127,14 @@ class AdminDashboard {
     }
 
     async handleRegister() {
+        const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const errorElement = document.getElementById('registerError');
 
         try {
             this.uiManager.showLoading();
-            await this.authService.register(email, password);
+            await this.authService.register(name, email, password);
             this.showDashboard();
             this.uiManager.hideLoading();
         } catch (error) {

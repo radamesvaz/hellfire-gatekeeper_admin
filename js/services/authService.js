@@ -74,7 +74,7 @@ export class AuthService {
         }
     }
 
-    async register(email, password) {
+    async register(name, email, password) {
         try {
             if (config.firebase.useFirebaseAuth) {
                 // Firebase Registration - no need to store in localStorage
@@ -87,7 +87,7 @@ export class AuthService {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email, password }),
+                    body: JSON.stringify({ name, email, password }),
                 });
 
                 if (!response.ok) {
@@ -102,6 +102,7 @@ export class AuthService {
                 
                 // Store basic user info from registration form
                 localStorage.setItem(this.userKey, JSON.stringify({
+                    name: name, // Store name from registration form
                     email: email, // Use email from registration form
                     role: 'admin' // Default role
                 }));
