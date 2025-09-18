@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pastry Shop Admin Dashboard</title>
+    <title>Panel de Administración - Pastelería</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍰</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="styles/forms.css">
@@ -15,40 +16,48 @@
     <div id="loginScreen" class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <h1>Pastry Shop Admin</h1>
-                <p>Sign in to manage your shop</p>
+                <h1>Administración de Pastelería</h1>
+                <p>Inicia sesión para gestionar tu tienda</p>
+            </div>
+            
+            <!-- Quote Section -->
+            <div id="quoteSection" class="quote-section">
+                <div class="quote-content">
+                    <p id="quoteText" class="quote-text">Cargando cita inspiradora...</p>
+                    <p id="quoteAuthor" class="quote-author">— Autor</p>
+                </div>
             </div>
             <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label for="email">Email</label>
+                    <label for="email">Correo Electrónico</label>
                     <input type="email" id="email" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password">Contraseña</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Sign In</button>
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
             </form>
             <div id="loginError" class="error-message hidden"></div>
             
             <!-- Register Form -->
             <form id="registerForm" class="login-form hidden">
                 <div class="form-group">
-                    <label for="registerEmail">Email</label>
+                    <label for="registerEmail">Correo Electrónico</label>
                     <input type="email" id="registerEmail" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label for="registerPassword">Password</label>
+                    <label for="registerPassword">Contraseña</label>
                     <input type="password" id="registerPassword" name="password" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Register</button>
+                <button type="submit" class="btn btn-primary">Registrarse</button>
             </form>
             <div id="registerError" class="error-message hidden"></div>
             
             <!-- Toggle between login and register -->
             <div class="form-toggle">
-                <button type="button" id="showRegisterBtn" class="btn-link">Need an account? Register</button>
-                <button type="button" id="showLoginBtn" class="btn-link hidden">Already have an account? Sign In</button>
+                <button type="button" id="showRegisterBtn" class="btn-link">¿Necesitas una cuenta? Regístrate</button>
+                <button type="button" id="showLoginBtn" class="btn-link hidden">¿Ya tienes una cuenta? Inicia Sesión</button>
             </div>
         </div>
     </div>
@@ -57,19 +66,26 @@
     <div id="dashboard" class="dashboard hidden">
         <!-- Header -->
         <header class="dashboard-header">
-            <div class="header-left">
-                <h1>Pastry Shop Admin</h1>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>Administración de Pastelería</h1>
+                </div>
+                <div class="header-right">
+                    <span id="userEmail" class="user-email"></span>
+                    <button id="logoutBtn" class="btn btn-secondary">Cerrar Sesión</button>
+                </div>
             </div>
-            <div class="header-right">
-                <span id="userEmail" class="user-email"></span>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            <!-- Mobile header info -->
+            <div class="header-mobile">
+                <span id="userEmailMobile" class="user-email-mobile"></span>
+                <button id="logoutBtnMobile" class="btn btn-secondary btn-mobile">Cerrar Sesión</button>
             </div>
         </header>
 
         <!-- Navigation -->
         <nav class="dashboard-nav">
-            <button class="nav-btn active" data-section="products">Products</button>
-            <button class="nav-btn" data-section="orders">Orders</button>
+            <button class="nav-btn active" data-section="products">Productos</button>
+            <button class="nav-btn" data-section="orders">Pedidos</button>
         </nav>
 
         <!-- Main Content -->
@@ -77,17 +93,17 @@
             <!-- Products Section -->
             <section id="productsSection" class="content-section">
                 <div class="section-header">
-                    <h2>Products Management</h2>
-                    <button id="addProductBtn" class="btn btn-primary">Add New Product</button>
+                    <h2>Gestión de Productos</h2>
+                    <button id="addProductBtn" class="btn btn-primary">Agregar Nuevo Producto</button>
                 </div>
                 <div class="table-container">
                     <table id="productsTable" class="data-table">
                         <thead>
                             <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Status</th>
+                                <th>Imagen</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody id="productsTableBody">
@@ -100,17 +116,17 @@
             <!-- Orders Section -->
             <section id="ordersSection" class="content-section hidden">
                 <div class="section-header">
-                    <h2>Orders Management</h2>
+                    <h2>Gestión de Pedidos</h2>
                 </div>
                 <div class="table-container">
                     <table id="ordersTable" class="data-table">
                         <thead>
                             <tr>
-                                <th>Delivery Date</th>
-                                <th>Customer</th>
-                                <th>Product</th>
-                                <th>Status</th>
-                                <th>Paid</th>
+                                <th>Fecha de Entrega</th>
+                                <th>Cliente</th>
+                                <th>Producto</th>
+                                <th>Estado</th>
+                                <th>Pagado</th>
                             </tr>
                         </thead>
                         <tbody id="ordersTableBody">
@@ -126,50 +142,50 @@
     <div id="productDetailsModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Product Details</h3>
+                <h3>Detalles del Producto</h3>
                 <button class="modal-close" id="closeProductDetailsModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="product-details">
                     <div class="product-info-section">
-                        <h4>Product Information</h4>
+                        <h4>Información del Producto</h4>
                         <div class="info-grid">
                             <div class="info-item">
-                                <label>Product ID:</label>
+                                <label>ID del Producto:</label>
                                 <span id="productDetailsId">-</span>
                             </div>
                             <div class="info-item">
-                                <label>Name:</label>
+                                <label>Nombre:</label>
                                 <span id="productDetailsName">-</span>
                             </div>
                             <div class="info-item">
-                                <label>Price:</label>
+                                <label>Precio:</label>
                                 <span id="productDetailsPrice" class="price-column">-</span>
                             </div>
                             <div class="info-item">
-                                <label>Stock:</label>
+                                <label>Inventario:</label>
                                 <span id="productDetailsStock">-</span>
                             </div>
                             <div class="info-item">
-                                <label>Status:</label>
+                                <label>Estado:</label>
                                 <span id="productDetailsStatus" class="status-badge">-</span>
                             </div>
                             <div class="info-item">
-                                <label>Available:</label>
+                                <label>Disponible:</label>
                                 <span id="productDetailsAvailable">-</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="description-section">
-                        <h4>Description</h4>
+                        <h4>Descripción</h4>
                         <div id="productDetailsDescription" class="product-description">
                             <!-- Description will be populated here -->
                         </div>
                     </div>
                     
                     <div class="images-section">
-                        <h4>Product Images</h4>
+                        <h4>Imágenes del Producto</h4>
                         <div id="productDetailsImages" class="product-images-detail">
                             <!-- Images will be populated here -->
                         </div>
@@ -177,9 +193,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancelProductDetails">Close</button>
-                <button type="button" class="btn btn-primary" id="editProductBtn">Edit Product</button>
-                <button type="button" class="btn btn-secondary" id="changeProductStatusBtn">Change Status</button>
+                <button type="button" class="btn btn-secondary" id="cancelProductDetails">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="editProductBtn">Editar Producto</button>
+                <button type="button" class="btn btn-secondary" id="changeProductStatusBtn">Cambiar Estado</button>
             </div>
         </div>
     </div>
@@ -188,57 +204,57 @@
     <div id="productModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="productModalTitle">Add New Product</h3>
+                <h3 id="productModalTitle">Agregar Nuevo Producto</h3>
                 <button class="modal-close" id="closeProductModal">&times;</button>
             </div>
             <form id="productForm" class="modal-form">
                 <div class="form-group">
-                    <label for="productName">Product Name</label>
+                    <label for="productName">Nombre del Producto</label>
                     <input type="text" id="productName" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="productDescription">Description</label>
+                    <label for="productDescription">Descripción</label>
                     <textarea id="productDescription" name="description" rows="3" required></textarea>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="productPrice">Price ($)</label>
+                        <label for="productPrice">Precio ($)</label>
                         <input type="number" id="productPrice" name="price" step="0.01" min="0" required>
                     </div>
                     <div class="form-group">
-                        <label for="productStock">Stock</label>
+                        <label for="productStock">Inventario</label>
                         <input type="number" id="productStock" name="stock" min="0" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="productStatus">Status</label>
+                    <label for="productStatus">Estado</label>
                     <select id="productStatus" name="status" required>
-                        <option value="">Select Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="featured">Featured</option>
+                        <option value="">Seleccionar Estado</option>
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
+                        <option value="featured">Destacado</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="productAvailable">Available</label>
+                    <label for="productAvailable">Disponible</label>
                     <select id="productAvailable" name="available" required>
-                        <option value="true">Yes</option>
+                        <option value="true">Sí</option>
                         <option value="false">No</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="productImages">Product Images</label>
+                    <label for="productImages">Imágenes del Producto</label>
                     <input type="file" id="productImages" name="images" multiple accept="image/*" class="file-input">
                     <div class="file-input-info">
-                        <small>Select multiple images (JPG, PNG, GIF)</small>
+                        <small>Selecciona múltiples imágenes (JPG, PNG, GIF)</small>
                     </div>
                     <div id="imagePreview" class="image-preview-container">
                         <!-- Image previews will be shown here -->
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="cancelProduct">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Product</button>
+                    <button type="button" class="btn btn-secondary" id="cancelProduct">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Producto</button>
                 </div>
             </form>
         </div>
@@ -248,37 +264,37 @@
     <div id="productStatusModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="productStatusModalTitle">Change Product Status</h3>
+                <h3 id="productStatusModalTitle">Cambiar Estado del Producto</h3>
                 <button class="modal-close" id="closeProductStatusModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="product-info">
-                    <h4 id="productStatusProductName">Product Name</h4>
-                    <p>Current Status: <span id="productStatusCurrentStatus" class="status-badge">active</span></p>
+                    <h4 id="productStatusProductName">Nombre del Producto</h4>
+                    <p>Estado Actual: <span id="productStatusCurrentStatus" class="status-badge">active</span></p>
                 </div>
                 <div class="status-options">
-                    <h5>Available Actions:</h5>
+                    <h5>Acciones Disponibles:</h5>
                     <div class="status-actions">
                         <button class="status-action-btn" data-status="active" id="setActiveBtn">
                             <span class="status-icon">✓</span>
-                            <span class="status-text">Set as Active</span>
-                            <span class="status-description">Make product visible and available for purchase</span>
+                            <span class="status-text">Establecer como Activo</span>
+                            <span class="status-description">Hacer el producto visible y disponible para compra</span>
                         </button>
                         <button class="status-action-btn" data-status="inactive" id="setInactiveBtn">
                             <span class="status-icon">⏸</span>
-                            <span class="status-text">Set as Inactive</span>
-                            <span class="status-description">Hide product from customers but keep it in the system</span>
+                            <span class="status-text">Establecer como Inactivo</span>
+                            <span class="status-description">Ocultar el producto de los clientes pero mantenerlo en el sistema</span>
                         </button>
                         <button class="status-action-btn status-delete" data-status="deleted" id="setDeletedBtn">
                             <span class="status-icon">🗑</span>
-                            <span class="status-text">Mark as Deleted</span>
-                            <span class="status-description">Remove product from main view (logical delete)</span>
+                            <span class="status-text">Marcar como Eliminado</span>
+                            <span class="status-description">Remover el producto de la vista principal (eliminación lógica)</span>
                         </button>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancelProductStatus">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="cancelProductStatus">Cancelar</button>
             </div>
         </div>
     </div>
@@ -287,31 +303,31 @@
     <div id="deleteConfirmationModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Confirm Product Deletion</h3>
+                <h3>Confirmar Eliminación del Producto</h3>
                 <button class="modal-close" id="closeDeleteConfirmationModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="delete-warning">
                     <div class="warning-icon">⚠️</div>
-                    <h4 id="deleteConfirmationProductName">Product Name</h4>
-                    <p>Are you sure you want to mark this product as deleted?</p>
+                    <h4 id="deleteConfirmationProductName">Nombre del Producto</h4>
+                    <p>¿Estás seguro de que quieres marcar este producto como eliminado?</p>
                 </div>
                 <div class="delete-consequences">
-                    <h5>What will happen:</h5>
+                    <h5>Lo que sucederá:</h5>
                     <ul>
-                        <li>✅ Product will be hidden from the main product list</li>
-                        <li>✅ Product will not be visible to customers</li>
-                        <li>✅ Product data will be preserved (logical delete)</li>
-                        <li>✅ Product can be restored later if needed</li>
+                        <li>✅ El producto será ocultado de la lista principal de productos</li>
+                        <li>✅ El producto no será visible para los clientes</li>
+                        <li>✅ Los datos del producto serán preservados (eliminación lógica)</li>
+                        <li>✅ El producto puede ser restaurado más tarde si es necesario</li>
                     </ul>
                 </div>
                 <div class="delete-note">
-                    <p><strong>Note:</strong> You can undo this action within 10 seconds after confirmation, or restore the product manually later.</p>
+                    <p><strong>Nota:</strong> Puedes deshacer esta acción dentro de 10 segundos después de la confirmación, o restaurar el producto manualmente más tarde.</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancelDeleteConfirmation">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteProduct">Yes, Mark as Deleted</button>
+                <button type="button" class="btn btn-secondary" id="cancelDeleteConfirmation">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteProduct">Sí, Marcar como Eliminado</button>
             </div>
         </div>
     </div>
@@ -320,21 +336,21 @@
     <div id="deleteImageConfirmationModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Delete Image</h3>
+                <h3>Eliminar Imagen</h3>
                 <button class="modal-close" id="closeDeleteImageConfirmationModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="delete-image-preview">
-                    <p>Are you sure you want to delete this image?</p>
+                    <p>¿Estás seguro de que quieres eliminar esta imagen?</p>
                     <div class="image-preview-container">
                         <img id="deleteImagePreview" src="" alt="Image to delete" class="delete-preview-image">
                     </div>
-                    <p class="delete-warning">This action cannot be undone.</p>
+                    <p class="delete-warning">Esta acción no se puede deshacer.</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancelDeleteImage">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteImage">Yes, Delete Image</button>
+                <button type="button" class="btn btn-secondary" id="cancelDeleteImage">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteImage">Sí, Eliminar Imagen</button>
             </div>
         </div>
     </div>
@@ -432,23 +448,23 @@
     <div id="orderStatusModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Update Order Status</h3>
+                <h3>Actualizar Estado del Pedido</h3>
                 <button class="modal-close" id="closeOrderModal">&times;</button>
             </div>
             <form id="orderStatusForm" class="modal-form">
                 <div class="form-group">
-                    <label for="orderStatus">Status</label>
+                    <label for="orderStatus">Estado</label>
                     <select id="orderStatus" name="status" required>
-                        <option value="pending">Pending</option>
-                        <option value="preparing">Preparing</option>
-                        <option value="ready">Ready for Pickup</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="preparing">Preparando</option>
+                        <option value="ready">Listo para Recoger</option>
+                        <option value="delivered">Entregado</option>
+                        <option value="cancelled">Cancelado</option>
                     </select>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="cancelOrderStatus">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Status</button>
+                    <button type="button" class="btn btn-secondary" id="cancelOrderStatus">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Estado</button>
                 </div>
             </form>
         </div>
@@ -460,6 +476,7 @@
     </div>
 
     <!-- Scripts -->
+    <script type="module" src="js/favqs-config.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

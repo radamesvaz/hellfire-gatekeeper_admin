@@ -27,7 +27,7 @@ export class ProductService {
                 const response = await this.httpService.get(`${this.baseURL}/products`);
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch products');
+                    throw new Error('Error al obtener los productos');
                 }
 
                 const products = await response.json();
@@ -48,7 +48,7 @@ export class ProductService {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch product');
+                    throw new Error('Error al obtener el producto');
             }
 
             return await response.json();
@@ -97,23 +97,12 @@ export class ProductService {
                         productDataOnly.available === 'true' : productDataOnly.available;
                 }
                 
-                console.log('Sending product data:', productDataOnly);
-                console.log('Data types:', {
-                    name: typeof productDataOnly.name,
-                    description: typeof productDataOnly.description,
-                    price: typeof productDataOnly.price,
-                    stock: typeof productDataOnly.stock,
-                    available: typeof productDataOnly.available,
-                    status: typeof productDataOnly.status
-                });
-                
                 const response = await this.httpService.post(`${this.baseURL}/auth/products`, productDataOnly);
 
                 if (!response.ok) {
                     // Get the error message from response
                     const errorText = await response.text();
-                    console.log('Backend error response:', errorText);
-                    throw new Error(errorText || 'Failed to create product');
+                    throw new Error(errorText || 'Error al crear el producto');
                 }
 
                 return await response.json();
@@ -169,8 +158,7 @@ export class ProductService {
                 if (!response.ok) {
                     // Get the error message from response
                     const errorText = await response.text();
-                    console.log('Backend error response:', errorText);
-                    throw new Error(errorText || 'Failed to upload images');
+                    throw new Error(errorText || 'Error al subir las imágenes');
                 }
 
                 return await response.json();
@@ -211,21 +199,12 @@ export class ProductService {
                 const encodedImageUrl = encodeURIComponent(imageUrl);
                 const deleteUrl = `${this.baseURL}/auth/products/${productId}/images?imageUrl=${encodedImageUrl}`;
                 
-                console.log('Deleting image:', {
-                    productId,
-                    imageUrl,
-                    encodedImageUrl,
-                    deleteUrl
-                });
-                
                 const response = await this.httpService.delete(deleteUrl);
 
                 if (!response.ok) {
                     // Get the error message from response
                     const errorText = await response.text();
-                    console.log('Backend error response:', errorText);
-                    console.log('Response status:', response.status);
-                    throw new Error(errorText || 'Failed to delete image');
+                    throw new Error(errorText || 'Error al eliminar la imagen');
                 }
 
                 return await response.json();
@@ -278,15 +257,13 @@ export class ProductService {
                         productDataOnly.available === 'true' : productDataOnly.available;
                 }
                 
-                console.log('Sending update data:', productDataOnly);
                 
                 const response = await this.httpService.put(`${this.baseURL}/auth/products/${id}`, productDataOnly);
 
                 if (!response.ok) {
                     // Get the error message from response
                     const errorText = await response.text();
-                    console.log('Backend error response:', errorText);
-                    throw new Error(errorText || 'Failed to update product');
+                    throw new Error(errorText || 'Error al actualizar el producto');
                 }
 
                 return await response.json();
@@ -320,7 +297,7 @@ export class ProductService {
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Failed to delete product');
+                    throw new Error(error.message || 'Error al eliminar el producto');
                 }
 
                 return await response.json();
@@ -336,23 +313,23 @@ export class ProductService {
         const errors = [];
 
         if (!data.name || data.name.trim().length === 0) {
-            errors.push('Product name is required');
+            errors.push('El nombre del producto es requerido');
         }
 
         if (!data.description || data.description.trim().length === 0) {
-            errors.push('Product description is required');
+            errors.push('La descripción del producto es requerida');
         }
 
         if (!data.price || isNaN(data.price) || data.price <= 0) {
-            errors.push('Valid price is required');
+            errors.push('Se requiere un precio válido');
         }
 
         if (!data.stock || isNaN(data.stock) || data.stock < 0) {
-            errors.push('Valid stock quantity is required');
+            errors.push('Se requiere una cantidad de inventario válida');
         }
 
         if (!data.status || data.status.trim().length === 0) {
-            errors.push('Product status is required');
+            errors.push('El estado del producto es requerido');
         }
 
         return errors;

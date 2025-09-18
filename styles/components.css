@@ -58,17 +58,58 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    background: linear-gradient(135deg, 
+        #14de4a 0%, 
+        #12c441 25%, 
+        #0ea83a 50%, 
+        #0d8f33 75%, 
+        #0b7a2b 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
     padding: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 2px, transparent 2px);
+    background-size: 60px 60px;
+    animation: float 20s linear infinite;
+    pointer-events: none;
+}
+
+.login-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .login-card {
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+    padding: 2.5rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 10;
 }
 
 .login-header {
@@ -77,15 +118,75 @@
 }
 
 .login-header h1 {
-    color: var(--text-primary);
-    font-size: 1.875rem;
+    background: linear-gradient(135deg, #14de4a, #0ea83a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .login-header p {
     color: var(--text-secondary);
     font-size: 0.875rem;
+}
+
+/* Quote Section */
+.quote-section {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(20, 222, 74, 0.1), rgba(12, 196, 65, 0.05));
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.quote-section::before {
+    content: '"';
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    font-size: 4rem;
+    color: var(--primary-color);
+    opacity: 0.2;
+    font-family: serif;
+    line-height: 1;
+}
+
+.quote-content {
+    position: relative;
+    z-index: 1;
+}
+
+.quote-text {
+    font-style: italic;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 0.5rem 0;
+    text-align: center;
+}
+
+.quote-author {
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.quote-section.loading .quote-text {
+    color: var(--text-secondary);
+    font-style: normal;
+}
+
+.quote-section.error .quote-text {
+    color: var(--danger-color);
+    font-style: normal;
 }
 
 /* Dashboard Layout */
@@ -99,10 +200,13 @@
     background-color: var(--surface-color);
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: var(--shadow-sm);
 }
 
 .dashboard-header h1 {
@@ -120,6 +224,68 @@
 .user-email {
     color: var(--text-secondary);
     font-size: 0.875rem;
+}
+
+/* Mobile header styles */
+.header-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.user-email-mobile {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.btn-mobile {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .header-right {
+        display: none;
+    }
+    
+    .header-mobile {
+        display: flex;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.25rem;
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        padding: 0.75rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.125rem;
+    }
+    
+    .user-email-mobile {
+        font-size: 0.8rem;
+    }
 }
 
 .dashboard-nav {
@@ -379,6 +545,45 @@
     to {
         opacity: 0;
         transform: translateX(100%);
+    }
+}
+
+/* Gradient Animation */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Floating Animation */
+@keyframes float {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+    100% {
+        transform: translateY(0px) rotate(360deg);
+    }
+}
+
+/* Card Float Animation */
+@keyframes cardFloat {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
     }
 }
 

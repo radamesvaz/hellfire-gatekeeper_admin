@@ -1,4 +1,5 @@
 // Configuration file for the admin dashboard
+import { envLoader } from './utils/envLoader.js';
 
 // Environment detection
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -48,6 +49,14 @@ export const config = {
         baseURL: envConfig.api.baseURL,
         authRequired: '/auth',
         timeout: 10000, // Request timeout in milliseconds
+    },
+    
+    // External APIs
+    external: {
+        favqs: {
+            baseURL: 'https://favqs.com/api',
+            apiKey: envLoader.getEnvVar('FAVQS_API_KEY', ''), // Loaded from .env file
+        },
     },
     
     // Authentication Configuration
@@ -117,10 +126,24 @@ export const getAuthHeaders = (token) => {
     };
 };
 
+// Helper function to set FavQs API key
+export const setFavQsApiKey = (apiKey) => {
+    config.external.favqs.apiKey = apiKey;
+};
+
+// Helper function to get FavQs API key
+export const getFavQsApiKey = () => {
+    return config.external.favqs.apiKey;
+};
+
+// Initialize configuration with environment variables
+export const initConfig = async () => {
+    await envLoader.init();
+    // Update API key after loading environment variables
+    config.external.favqs.apiKey = envLoader.getEnvVar('FAVQS_API_KEY', '');
+};
+
 // Helper function to log current environment (for debugging)
 export const logEnvironment = () => {
-    console.log('Environment:', config.environment.current);
-    console.log('API Base URL:', config.api.baseURL);
-    console.log('Is Development:', config.environment.isDevelopment);
-    console.log('Is Production:', config.environment.isProduction);
+    // Debug logging removed for production
 };

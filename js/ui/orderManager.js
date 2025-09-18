@@ -62,7 +62,7 @@ export class OrderManager {
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError('Failed to load orders');
+            this.uiManager.showError('Error al cargar los pedidos');
             console.error('Load orders error:', error);
         }
     }
@@ -75,7 +75,7 @@ export class OrderManager {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        No orders found. Orders will appear here when customers place them.
+                        No se encontraron pedidos. Los pedidos aparecerán aquí cuando los clientes los realicen.
                     </td>
                 </tr>
             `;
@@ -188,7 +188,7 @@ export class OrderManager {
         const numericOrderId = parseInt(orderId, 10);
         this.editingOrder = this.orders.find(o => o.id === numericOrderId);
         if (!this.editingOrder) {
-            this.uiManager.showError('Order not found');
+            this.uiManager.showError('Pedido no encontrado');
             return;
         }
 
@@ -202,20 +202,20 @@ export class OrderManager {
         const newStatus = formData.status;
 
         if (!this.orderService.validateOrderStatus(newStatus)) {
-            this.uiManager.showError('Invalid order status');
+            this.uiManager.showError('Estado de pedido inválido');
             return;
         }
 
         try {
             this.uiManager.showLoading();
             await this.orderService.updateOrderStatus(this.editingOrder.id, newStatus);
-            this.uiManager.showSuccess('Order status updated successfully');
+            this.uiManager.showSuccess('Estado del pedido actualizado exitosamente');
             this.hideOrderStatusModal();
             await this.loadOrders(); // Reload orders
             this.uiManager.hideLoading();
         } catch (error) {
             this.uiManager.hideLoading();
-            this.uiManager.showError(error.message || 'Failed to update order status');
+            this.uiManager.showError(error.message || 'Error al actualizar el estado del pedido');
             console.error('Order status update error:', error);
         }
     }
@@ -236,9 +236,9 @@ export class OrderManager {
                 this.updateOrderDetailsPaidStatus(paid);
             }
             
-            this.uiManager.showSuccess(`Order ${paid ? 'marked as paid' : 'marked as unpaid'}`);
+            this.uiManager.showSuccess(`Pedido ${paid ? 'marcado como pagado' : 'marcado como no pagado'}`);
         } catch (error) {
-            this.uiManager.showError(error.message || 'Failed to update payment status');
+            this.uiManager.showError(error.message || 'Error al actualizar el estado de pago');
             console.error('Paid status update error:', error);
             
             // Revert the checkbox state on error
@@ -281,7 +281,7 @@ export class OrderManager {
                 </div>
             `;
         } else {
-            notesContainer.innerHTML = '<div class="no-notes">No hay notas para esta orden</div>';
+            notesContainer.innerHTML = '<div class="no-notes">No hay notas para este pedido</div>';
         }
         
         // Populate order items
@@ -310,7 +310,7 @@ export class OrderManager {
             document.getElementById('orderDetailsSubtotal').textContent = this.uiManager.formatPrice(subtotal);
             document.getElementById('orderDetailsItemCount').textContent = totalItems;
         } else {
-            itemsContainer.innerHTML = '<div class="no-items">No hay productos en esta orden</div>';
+            itemsContainer.innerHTML = '<div class="no-items">No hay productos en este pedido</div>';
             document.getElementById('orderDetailsSubtotal').textContent = this.uiManager.formatPrice(0);
             document.getElementById('orderDetailsItemCount').textContent = '0';
         }
