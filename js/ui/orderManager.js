@@ -101,13 +101,13 @@ export class OrderManager {
             this.showOrderDetails(order);
         });
 
-        // Delivery Date (using order date as delivery date for now)
+        // Delivery Date (using actual delivery date)
         const deliveryDateCell = document.createElement('td');
-        const orderDate = new Date(order.date);
+        const deliveryDate = new Date(order.deliveryDate);
         deliveryDateCell.innerHTML = `
             <div>
-                <div><strong>${orderDate.getDate()}/${orderDate.getMonth() + 1}</strong></div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${orderDate.getFullYear()}</div>
+                <div><strong>${deliveryDate.getDate()}/${deliveryDate.getMonth() + 1}</strong></div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">${deliveryDate.getFullYear()}</div>
             </div>
         `;
 
@@ -256,10 +256,8 @@ export class OrderManager {
         document.getElementById('orderDetailsId').textContent = order.id;
         document.getElementById('orderDetailsDate').textContent = this.uiManager.formatDate(order.date);
         
-        // Set delivery date (using order date + 1 day as example)
-        const orderDate = new Date(order.date);
-        const deliveryDate = new Date(orderDate);
-        deliveryDate.setDate(deliveryDate.getDate() + 1);
+        // Set delivery date (using actual delivery date)
+        const deliveryDate = new Date(order.deliveryDate);
         document.getElementById('orderDetailsDeliveryDate').textContent = this.uiManager.formatDate(deliveryDate);
         
         document.getElementById('orderDetailsTotal').textContent = this.uiManager.formatPrice(order.total);
