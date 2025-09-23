@@ -41,13 +41,19 @@ export class HttpService {
         }
     }
 
-    // GET request with auth headers
+    // GET request
+    // Note: Avoid sending Content-Type/Authorization on public endpoints to prevent CORS preflight
     async get(url) {
+        const requiresAuth = url.includes('/auth');
+        const headers = requiresAuth
+            ? { 'Authorization': `Bearer ${this.authService.getToken()}` }
+            : {};
+
         const options = {
             method: 'GET',
-            headers: this.authService.getAuthHeaders(),
+            headers,
         };
-        
+
         return this.fetch(url, options);
     }
 

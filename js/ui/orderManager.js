@@ -209,7 +209,13 @@ export class OrderManager {
         try {
             this.uiManager.showLoading();
             await this.orderService.updateOrderStatus(this.editingOrder.id, newStatus);
-            this.uiManager.showSuccess('Estado del pedido actualizado exitosamente');
+            
+            // Show different success message for deleted status
+            const successMessage = newStatus === 'deleted' 
+                ? 'Pedido marcado como eliminado exitosamente' 
+                : 'Estado del pedido actualizado exitosamente';
+            
+            this.uiManager.showSuccess(successMessage);
             this.hideOrderStatusModal();
             await this.loadOrders(); // Reload orders
             this.uiManager.hideLoading();

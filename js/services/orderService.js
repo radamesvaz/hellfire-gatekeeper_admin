@@ -46,10 +46,7 @@ export class OrderService {
 
     async getOrder(id) {
         try {
-            const response = await fetch(`${this.baseURL}${this.authRequired}/orders/${id}`, {
-                method: 'GET',
-                headers: this.authService.getAuthHeaders(),
-            });
+            const response = await this.httpService.get(`${this.baseURL}${this.authRequired}/orders/${id}`);
 
             if (!response.ok) {
                     throw new Error('Error al obtener el pedido');
@@ -82,7 +79,7 @@ export class OrderService {
                 this.mockOrders[orderIndex] = updatedOrder;
                 return updatedOrder;
             } else {
-                // Real API call using unified endpoint
+                // Real API call using unified PATCH endpoint
                 const response = await this.httpService.patch(`${this.baseURL}${this.authRequired}/orders/${id}`, { status });
 
                 if (!response.ok) {
@@ -118,7 +115,7 @@ export class OrderService {
                 this.mockOrders[orderIndex] = updatedOrder;
                 return updatedOrder;
             } else {
-                // Real API call using unified endpoint
+                // Real API call using unified PATCH endpoint
                 const response = await this.httpService.patch(`${this.baseURL}${this.authRequired}/orders/${id}`, { paid });
 
                 if (!response.ok) {
@@ -174,7 +171,7 @@ export class OrderService {
 
     // Helper method to validate order status
     validateOrderStatus(status) {
-        const validStatuses = ['pending', 'preparing', 'ready', 'delivered', 'cancelled'];
+        const validStatuses = config.validation.order.validStatuses;
         return validStatuses.includes(status);
     }
 

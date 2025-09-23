@@ -42,10 +42,7 @@ export class ProductService {
 
     async getProduct(id) {
         try {
-            const response = await fetch(`${this.baseURL}/products/${id}`, {
-                method: 'GET',
-                headers: this.authService.getAuthHeaders(),
-            });
+            const response = await this.httpService.get(`${this.baseURL}/products/${id}`);
 
             if (!response.ok) {
                     throw new Error('Error al obtener el producto');
