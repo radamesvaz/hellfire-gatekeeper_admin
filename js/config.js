@@ -94,7 +94,7 @@ export const config = {
             validStatuses: ['active', 'inactive', 'deleted'],
         },
         order: {
-            validStatuses: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
+            validStatuses: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled', 'deleted'],
         },
     },
 };

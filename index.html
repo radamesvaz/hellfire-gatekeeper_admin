@@ -121,6 +121,13 @@
             <section id="ordersSection" class="content-section hidden">
                 <div class="section-header">
                     <h2>Gestión de Pedidos</h2>
+                    <div class="section-controls">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="showDeletedOrders" onchange="window.orderManager.toggleDeletedOrders()">
+                            <span class="checkmark"></span>
+                            Mostrar órdenes eliminadas
+                        </label>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table id="ordersTable" class="data-table">
@@ -460,10 +467,12 @@
                     <label for="orderStatus">Estado</label>
                     <select id="orderStatus" name="status" required>
                         <option value="pending">Pendiente</option>
+                        <option value="confirmed">Confirmado</option>
                         <option value="preparing">Preparando</option>
                         <option value="ready">Listo para Recoger</option>
-                        <option value="delivered">Entregado</option>
+                        <option value="completed">Completado</option>
                         <option value="cancelled">Cancelado</option>
+                        <option value="deleted">Eliminado</option>
                     </select>
                 </div>
                 <div class="form-actions">

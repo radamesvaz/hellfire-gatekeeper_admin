@@ -5,6 +5,7 @@ export class OrderManager {
         this.orders = [];
         this.editingOrder = null;
         this.currentOrderDetails = null;
+        this.showDeletedOrders = false;
         
         this.setupEventListeners();
     }
@@ -57,7 +58,7 @@ export class OrderManager {
     async loadOrders() {
         try {
             this.uiManager.showLoading();
-            this.orders = await this.orderService.getAllOrders();
+            this.orders = await this.orderService.getAllOrders(this.showDeletedOrders);
             this.renderOrders();
             this.uiManager.hideLoading();
         } catch (error) {
@@ -209,7 +210,13 @@ export class OrderManager {
         try {
             this.uiManager.showLoading();
             await this.orderService.updateOrderStatus(this.editingOrder.id, newStatus);
-            this.uiManager.showSuccess('Estado del pedido actualizado exitosamente');
+            
+            // Show different success message for deleted status
+            const successMessage = newStatus === 'deleted' 
+                ? 'Pedido marcado como eliminado exitosamente' 
+                : 'Estado del pedido actualizado exitosamente';
+            
+            this.uiManager.showSuccess(successMessage);
             this.hideOrderStatusModal();
             await this.loadOrders(); // Reload orders
             this.uiManager.hideLoading();
@@ -368,6 +375,12 @@ export class OrderManager {
             const orderDate = new Date(order.date);
             return orderDate >= startDate && orderDate <= endDate;
         });
+    }
+
+    // Toggle deleted orders visibility
+    toggleDeletedOrders() {
+        this.showDeletedOrders = document.getElementById('showDeletedOrders').checked;
+        this.loadOrders();
     }
 }
 
