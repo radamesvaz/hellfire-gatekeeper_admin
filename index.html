@@ -121,6 +121,13 @@
             <section id="ordersSection" class="content-section hidden">
                 <div class="section-header">
                     <h2>Gestión de Pedidos</h2>
+                    <div class="section-controls">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="showDeletedOrders" onchange="window.orderManager.toggleDeletedOrders()">
+                            <span class="checkmark"></span>
+                            Mostrar órdenes eliminadas
+                        </label>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table id="ordersTable" class="data-table">

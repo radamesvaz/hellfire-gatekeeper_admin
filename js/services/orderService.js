@@ -17,7 +17,7 @@ export class OrderService {
         }
     }
 
-    async getAllOrders() {
+    async getAllOrders(includeDeleted = false) {
         try {
             if (this.useMockData) {
                 // Mock API call
@@ -27,7 +27,10 @@ export class OrderService {
                 return transformedOrders;
             } else {
                 // Real API call using HttpService
-                const response = await this.httpService.get(`${this.baseURL}${this.authRequired}/orders`);
+                const url = includeDeleted 
+                    ? `${this.baseURL}${this.authRequired}/orders?ignore_status=true`
+                    : `${this.baseURL}${this.authRequired}/orders`;
+                const response = await this.httpService.get(url);
 
                 if (!response.ok) {
                     throw new Error('Error al obtener los pedidos');
