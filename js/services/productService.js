@@ -305,6 +305,54 @@ export class ProductService {
         }
     }
 
+    async setProductThumbnail(productId, thumbnailUrl) {
+        try {
+            if (this.useMockData) {
+                // Mock API call to set thumbnail
+                await simulateApiDelay(500);
+
+                const productIndex = this.mockProducts.findIndex(p => p.id === productId);
+                if (productIndex === -1) {
+                    throw new Error('Product not found');
+                }
+
+                const product = this.mockProducts[productIndex];
+                const existingImages = product.image_urls || [];
+
+                // Ensure the thumbnail image is part of the image list
+                if (!existingImages.includes(thumbnailUrl)) {
+                    product.image_urls = [...existingImages, thumbnailUrl];
+                } else {
+                    product.image_urls = existingImages;
+                }
+
+                product.imageUrl = thumbnailUrl;
+                product.updatedAt = new Date().toISOString();
+
+                this.mockProducts[productIndex] = product;
+                return product;
+            } else {
+                // Real API call to set thumbnail
+                const response = await this.httpService.patch(
+                    `${this.baseURL}/auth/products/${productId}/thumbnail`,
+                    {
+                        thumbnail_url: thumbnailUrl
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Error al actualizar el thumbnail del producto');
+                }
+
+                return await response.json();
+            }
+        } catch (error) {
+            console.error('Set product thumbnail error:', error);
+            throw error;
+        }
+    }
+
     // Helper method to validate product data
     validateProductData(data) {
         const errors = [];
@@ -337,6 +385,12 @@ export class ProductService {
         return serverProducts.map(product => {
             // Use image_urls as is from the server
             const imageUrls = product.image_urls || [];
+
+            // Prefer explicit thumbnail field if present, otherwise fall back to first image
+            const thumbnail =
+                product.thumbnail ||
+                product.thumbnail_url ||
+                (imageUrls.length > 0 ? imageUrls[0] : null);
             
             return {
                 id: product.id_product,
@@ -344,7 +398,7 @@ export class ProductService {
                 description: product.description,
                 price: product.price,
                 stock: product.stock,
-                imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
+                imageUrl: thumbnail,
                 imageUrls: imageUrls,
                 status: product.status,
                 available: product.available,

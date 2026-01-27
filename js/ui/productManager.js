@@ -11,6 +11,8 @@ export class ProductManager {
         this.pendingDeleteProduct = null;
         this.currentProductDetails = null;
         this.undoTimeout = null;
+        this.thumbnailSelectionProductId = null;
+        this.thumbnailSelectionImages = [];
         
         this.setupEventListeners();
     }
@@ -143,6 +145,22 @@ export class ProductManager {
         confirmDeleteImage.addEventListener('click', () => {
             this.confirmDeleteImage();
         });
+
+        // Thumbnail Selection Modal event listeners
+        const closeThumbnailSelectionModal = document.getElementById('closeThumbnailSelectionModal');
+        const cancelThumbnailSelection = document.getElementById('cancelThumbnailSelection');
+
+        if (closeThumbnailSelectionModal) {
+            closeThumbnailSelectionModal.addEventListener('click', () => {
+                this.hideThumbnailSelectionModal();
+            });
+        }
+
+        if (cancelThumbnailSelection) {
+            cancelThumbnailSelection.addEventListener('click', () => {
+                this.hideThumbnailSelectionModal();
+            });
+        }
     }
 
     async loadProducts() {
@@ -286,6 +304,9 @@ export class ProductManager {
             return;
         }
 
+        let newProductId = null;
+        let newProductImages = [];
+
         try {
             this.uiManager.showLoading();
             
@@ -317,11 +338,23 @@ export class ProductManager {
                 // Create new product first
                 const createdProduct = await this.productService.createProduct(formData);
                 
+                // Extract product ID from the response
+                newProductId = createdProduct.product_id || createdProduct.id;
+
                 // If there are images, upload them separately
-                if (this.selectedImages.length > 0) {
-                    // Extract product ID from the response
-                    const productId = createdProduct.product_id || createdProduct.id;
-                    await this.productService.uploadProductImages(productId, this.selectedImages);
+                if (this.selectedImages.length > 0 && newProductId) {
+                    const uploadResult = await this.productService.uploadProductImages(newProductId, this.selectedImages);
+
+                    // Try to extract the list of image URLs from the upload response
+                    if (Array.isArray(uploadResult)) {
+                        newProductImages = uploadResult;
+                    } else if (uploadResult) {
+                        if (Array.isArray(uploadResult.all_images)) {
+                            newProductImages = uploadResult.all_images;
+                        } else if (Array.isArray(uploadResult.image_urls)) {
+                            newProductImages = uploadResult.image_urls;
+                        }
+                    }
                 }
                 
                 this.uiManager.showSuccess('Producto creado exitosamente');
@@ -330,6 +363,11 @@ export class ProductManager {
             this.hideProductModal();
             await this.loadProducts(); // Reload products
             this.uiManager.hideLoading();
+
+            // After creating a new product with images, allow selecting a thumbnail
+            if (newProductId && newProductImages.length > 0) {
+                this.showThumbnailSelection(newProductId, newProductImages);
+            }
         } catch (error) {
             this.uiManager.hideLoading();
             this.uiManager.showError(error.message || 'Error al guardar el producto');
@@ -623,24 +661,30 @@ export class ProductManager {
         
         // Populate images
         const imagesContainer = document.getElementById('productDetailsImages');
+        const currentThumbnail = product.imageUrl || product.thumbnail || product.thumbnail_url || null;
+
         if (product.imageUrls && product.imageUrls.length > 0) {
             // Show all images from the imageUrls array with delete buttons
-            const imagesHTML = product.imageUrls.map((imageUrl, index) => `
-                <div class="product-image-detail">
+            const imagesHTML = product.imageUrls.map((imageUrl, index) => {
+                const isThumbnail = currentThumbnail && imageUrl === currentThumbnail;
+
+                return `
+                <div class="product-image-detail${isThumbnail ? ' is-thumbnail' : ''}">
                     <img src="${getImageUrl(imageUrl)}" alt="${product.name} - Image ${index + 1}" class="product-detail-image">
                     <button class="delete-image-btn" onclick="productManager.deleteImageFromProduct(${product.id}, '${imageUrl}')" title="Delete this image">
                         ×
                     </button>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             imagesContainer.innerHTML = imagesHTML;
         } else if (product.imageUrl) {
             // Fallback to single image if imageUrls array is not available
             imagesContainer.innerHTML = `
-                <div class="product-image-detail">
+                <div class="product-image-detail is-thumbnail">
                     <img src="${getImageUrl(product.imageUrl)}" alt="${product.name}" class="product-detail-image">
-                    <button class="delete-image-btn" onclick="productManager.deleteImageFromProduct(${product.id}, '${product.imageUrl}')" title="Delete this image">
+                    <button class="delete-image-btn" onclick="productManager.deleteImageFromProduct(${product.id}, '${product.imageUrl}')" title="Delete this imagen">
                         ×
                     </button>
                 </div>
@@ -706,6 +750,72 @@ export class ProductManager {
         this.pendingImageDeletion = null;
     }
 
+    showThumbnailSelection(productId, imageUrls) {
+        if (!imageUrls || imageUrls.length === 0) {
+            return;
+        }
+
+        // Normalize product ID to number for consistency
+        this.thumbnailSelectionProductId = parseInt(productId);
+        this.thumbnailSelectionImages = imageUrls;
+
+        const container = document.getElementById('thumbnailSelectionContainer');
+        if (!container) {
+            console.error('Thumbnail selection container not found');
+            return;
+        }
+
+        container.innerHTML = '';
+
+        imageUrls.forEach((imageUrl) => {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'thumbnail-option';
+
+            const img = document.createElement('img');
+            img.src = getImageUrl(imageUrl);
+            img.alt = 'Thumbnail option';
+            img.className = 'thumbnail-option-image';
+
+            optionButton.appendChild(img);
+
+            optionButton.addEventListener('click', () => {
+                this.selectThumbnail(this.thumbnailSelectionProductId, imageUrl);
+            });
+
+            container.appendChild(optionButton);
+        });
+
+        this.uiManager.showModal('thumbnailSelectionModal');
+    }
+
+    hideThumbnailSelectionModal() {
+        this.uiManager.hideModal('thumbnailSelectionModal');
+        this.thumbnailSelectionProductId = null;
+        this.thumbnailSelectionImages = [];
+    }
+
+    async selectThumbnail(productId, imageUrl) {
+        if (!productId || !imageUrl) {
+            return;
+        }
+
+        try {
+            this.uiManager.showLoading();
+            
+            await this.productService.setProductThumbnail(productId, imageUrl);
+
+            this.uiManager.showSuccess('Thumbnail del producto actualizado exitosamente');
+            this.hideThumbnailSelectionModal();
+            await this.loadProducts();
+            this.uiManager.hideLoading();
+        } catch (error) {
+            this.uiManager.hideLoading();
+            this.uiManager.showError(error.message || 'Error al actualizar el thumbnail del producto');
+            console.error('Set thumbnail error:', error);
+        }
+    }
+
     hideProductDetailsModal() {
         this.uiManager.hideModal('productDetailsModal');
         this.currentProductDetails = null;
@@ -758,6 +868,13 @@ export class ProductManager {
                 const img = document.createElement('img');
                 img.src = getImageUrl(imageUrl);
                 img.alt = `Existing image ${index + 1}`;
+                img.title = 'Click para establecer como thumbnail';
+                img.style.cursor = 'pointer';
+                img.addEventListener('click', () => {
+                    if (this.editingProduct && this.editingProduct.id) {
+                        this.selectThumbnail(this.editingProduct.id, imageUrl);
+                    }
+                });
                 
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-image';
@@ -821,6 +938,13 @@ export class ProductManager {
             const img = document.createElement('img');
             img.src = getImageUrl(imageUrl);
             img.alt = `Existing image ${index + 1}`;
+            img.title = 'Click para establecer como thumbnail';
+            img.style.cursor = 'pointer';
+            img.addEventListener('click', () => {
+                if (product && product.id) {
+                    this.selectThumbnail(product.id, imageUrl);
+                }
+            });
             
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-image';
