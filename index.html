@@ -206,6 +206,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancelProductDetails">Cerrar</button>
                 <button type="button" class="btn btn-primary" id="editProductBtn">Editar Producto</button>
+                <button type="button" class="btn btn-danger" id="deleteProductBtn">🗑 Eliminar</button>
                 <button type="button" class="btn btn-secondary" id="changeProductStatusBtn">Cambiar Estado</button>
             </div>
         </div>
@@ -296,11 +297,6 @@
                             <span class="status-text">Establecer como Inactivo</span>
                             <span class="status-description">Ocultar el producto de los clientes pero mantenerlo en el sistema</span>
                         </button>
-                        <button class="status-action-btn status-delete" data-status="deleted" id="setDeletedBtn">
-                            <span class="status-icon">🗑</span>
-                            <span class="status-text">Marcar como Eliminado</span>
-                            <span class="status-description">Remover el producto de la vista principal (eliminación lógica)</span>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -333,7 +329,7 @@
                     </ul>
                 </div>
                 <div class="delete-note">
-                    <p><strong>Nota:</strong> Puedes deshacer esta acción dentro de 10 segundos después de la confirmación, o restaurar el producto manualmente más tarde.</p>
+                    <p><strong>Nota:</strong> Puedes deshacer esta acción dentro de 3 segundos después de la confirmación, o restaurar el producto manualmente más tarde.</p>
                 </div>
             </div>
             <div class="modal-footer">

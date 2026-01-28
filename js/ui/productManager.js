@@ -54,27 +54,30 @@ export class ProductManager {
         const cancelProductStatus = document.getElementById('cancelProductStatus');
         const setActiveBtn = document.getElementById('setActiveBtn');
         const setInactiveBtn = document.getElementById('setInactiveBtn');
-        const setDeletedBtn = document.getElementById('setDeletedBtn');
+
+        if (closeProductStatusModal) {
+            closeProductStatusModal.addEventListener('click', () => {
+                this.hideProductStatusModal();
+            });
+        }
         
-        closeProductStatusModal.addEventListener('click', () => {
-            this.hideProductStatusModal();
-        });
-        
-        cancelProductStatus.addEventListener('click', () => {
-            this.hideProductStatusModal();
-        });
+        if (cancelProductStatus) {
+            cancelProductStatus.addEventListener('click', () => {
+                this.hideProductStatusModal();
+            });
+        }
 
-        setActiveBtn.addEventListener('click', () => {
-            this.changeProductStatus('active');
-        });
+        if (setActiveBtn) {
+            setActiveBtn.addEventListener('click', () => {
+                this.changeProductStatus('active');
+            });
+        }
 
-        setInactiveBtn.addEventListener('click', () => {
-            this.changeProductStatus('inactive');
-        });
-
-        setDeletedBtn.addEventListener('click', () => {
-            this.showDeleteConfirmationModal();
-        });
+        if (setInactiveBtn) {
+            setInactiveBtn.addEventListener('click', () => {
+                this.changeProductStatus('inactive');
+            });
+        }
 
         // Delete Confirmation Modal event listeners
         const closeDeleteConfirmationModal = document.getElementById('closeDeleteConfirmationModal');
@@ -97,37 +100,66 @@ export class ProductManager {
         const closeProductDetailsModal = document.getElementById('closeProductDetailsModal');
         const cancelProductDetails = document.getElementById('cancelProductDetails');
         const editProductBtn = document.getElementById('editProductBtn');
+        const deleteProductBtn = document.getElementById('deleteProductBtn');
         const changeProductStatusBtn = document.getElementById('changeProductStatusBtn');
         
-        closeProductDetailsModal.addEventListener('click', () => {
-            this.hideProductDetailsModal();
-        });
+        if (closeProductDetailsModal) {
+            closeProductDetailsModal.addEventListener('click', () => {
+                this.hideProductDetailsModal();
+            });
+        }
         
-        cancelProductDetails.addEventListener('click', () => {
-            this.hideProductDetailsModal();
-        });
+        if (cancelProductDetails) {
+            cancelProductDetails.addEventListener('click', () => {
+                this.hideProductDetailsModal();
+            });
+        }
 
-        editProductBtn.addEventListener('click', () => {
-            // Store the product ID before closing the modal
-            const productId = this.currentProductDetails ? this.currentProductDetails.id : null;
-            this.hideProductDetailsModal();
-            if (productId) {
-                this.editProduct(productId);
-            } else {
-                console.error('No product details available for editing');
-            }
-        });
+        if (editProductBtn) {
+            editProductBtn.addEventListener('click', () => {
+                // Store the product ID before closing the modal
+                const productId = this.currentProductDetails ? this.currentProductDetails.id : null;
+                this.hideProductDetailsModal();
+                if (productId) {
+                    this.editProduct(productId);
+                } else {
+                    console.error('No product details available for editing');
+                }
+            });
+        }
 
-        changeProductStatusBtn.addEventListener('click', () => {
-            // Store the product ID before closing the modal
-            const productId = this.currentProductDetails ? this.currentProductDetails.id : null;
-            this.hideProductDetailsModal();
-            if (productId) {
-                this.showStatusModal(productId);
-            } else {
-                console.error('No product details available for status change');
-            }
-        });
+        if (changeProductStatusBtn) {
+            changeProductStatusBtn.addEventListener('click', () => {
+                // Store the product ID before closing the modal
+                const productId = this.currentProductDetails ? this.currentProductDetails.id : null;
+                this.hideProductDetailsModal();
+                if (productId) {
+                    this.showStatusModal(productId);
+                } else {
+                    console.error('No product details available for status change');
+                }
+            });
+        }
+
+        // Delete product button (separate from status)
+        if (deleteProductBtn) {
+            deleteProductBtn.addEventListener('click', () => {
+                if (!this.currentProductDetails) {
+                    this.uiManager.showError('No hay producto seleccionado para eliminar');
+                    return;
+                }
+
+                // Store the product for deletion
+                this.pendingDeleteProduct = this.currentProductDetails;
+
+                // Update modal content
+                document.getElementById('deleteConfirmationProductName').textContent = this.pendingDeleteProduct.name;
+
+                // Hide details modal and show delete confirmation modal
+                this.hideProductDetailsModal();
+                this.uiManager.showModal('deleteConfirmationModal');
+            });
+        }
 
         // Delete Image Confirmation Modal event listeners
         const closeDeleteImageConfirmationModal = document.getElementById('closeDeleteImageConfirmationModal');
@@ -419,12 +451,10 @@ export class ProductManager {
     updateStatusButtons(currentStatus) {
         const setActiveBtn = document.getElementById('setActiveBtn');
         const setInactiveBtn = document.getElementById('setInactiveBtn');
-        const setDeletedBtn = document.getElementById('setDeletedBtn');
 
         // Reset all buttons
         setActiveBtn.disabled = false;
         setInactiveBtn.disabled = false;
-        setDeletedBtn.disabled = false;
 
         // Disable the current status button
         switch (currentStatus) {
@@ -433,9 +463,6 @@ export class ProductManager {
                 break;
             case 'inactive':
                 setInactiveBtn.disabled = true;
-                break;
-            case 'deleted':
-                setDeletedBtn.disabled = true;
                 break;
         }
     }
@@ -564,7 +591,7 @@ export class ProductManager {
                 <p class="undo-notification-message">"${product.name}" ha sido marcado como eliminado.</p>
             </div>
             <div class="undo-notification-actions">
-                <span class="undo-notification-countdown" id="undoCountdown">10</span>
+                <span class="undo-notification-countdown" id="undoCountdown">3</span>
                 <button class="undo-btn" id="undoDeleteBtn">Deshacer</button>
             </div>
         `;
@@ -581,8 +608,8 @@ export class ProductManager {
             this.hideUndoNotification(notification);
         });
 
-        // Start countdown
-        let countdown = 10;
+        // Start countdown (3 seconds)
+        let countdown = 3;
         const countdownInterval = setInterval(() => {
             countdown--;
             countdownElement.textContent = countdown;
@@ -593,11 +620,11 @@ export class ProductManager {
             }
         }, 1000);
 
-        // Auto-hide after 10 seconds
+        // Auto-hide after 3 seconds
         this.undoTimeout = setTimeout(() => {
             clearInterval(countdownInterval);
             this.hideUndoNotification(notification);
-        }, 10000);
+        }, 3000);
     }
 
     async undoDelete(product, previousStatus) {
