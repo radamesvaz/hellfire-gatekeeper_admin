@@ -320,6 +320,13 @@
     
     .modal-footer {
         padding: 1rem 1.5rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
     }
     
     .status-action-btn {
